@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 public class Commands implements CommandExecutor {
 
@@ -69,23 +68,22 @@ public class Commands implements CommandExecutor {
 
         switch (args[0].toLowerCase()) {
             case "reload":
-                if (!sender.hasPermission("blockregen.admin")) {
-                    Message.NO_PERM.send(sender);
+                if (permission(sender, "blockregen.command.reload")) {
                     return false;
                 }
 
                 plugin.reload(sender);
                 break;
             case "bypass":
-                if (checkConsole(sender))
-                    return false;
-
-                player = (Player) sender;
-
-                if (!player.hasPermission("blockregen.bypass")) {
-                    Message.NO_PERM.send(player);
+                if (permission(sender, "blockregen.command.bypass")) {
                     return false;
                 }
+
+                if (checkConsole(sender)) {
+                    return false;
+                }
+
+                player = (Player) sender;
 
                 if (plugin.getRegenerationManager().switchBypass(player)) {
                     Message.BYPASS_ON.send(player);
@@ -94,15 +92,15 @@ public class Commands implements CommandExecutor {
                 }
                 break;
             case "check":
-                if (checkConsole(sender))
-                    return false;
-
-                player = (Player) sender;
-
-                if (!player.hasPermission("blockregen.datacheck")) {
-                    Message.NO_PERM.send(player);
+                if (permission(sender, "blockregen.command.check")) {
                     return false;
                 }
+
+                if (checkConsole(sender)) {
+                    return false;
+                }
+
+                player = (Player) sender;
 
                 if (plugin.getRegenerationManager().switchDataCheck(player)) {
                     Message.DATA_CHECK_ON.send(player);
@@ -111,6 +109,10 @@ public class Commands implements CommandExecutor {
                 }
                 break;
             case "tools": {
+                if (permission(sender, "blockregen.command.tools")) {
+                    return false;
+                }
+
                 if (checkConsole(sender)) {
                     return false;
                 }
@@ -141,6 +143,9 @@ public class Commands implements CommandExecutor {
                 break;
             }
             case "regions": {
+                if (permission(sender, "blockregen.command.regions")) {
+                    return false;
+                }
 
                 if (checkConsole(sender)) {
                     return false;
@@ -174,15 +179,16 @@ public class Commands implements CommandExecutor {
             }
             case "region": {
 
-                if (checkConsole(sender))
-                    return false;
-
-                player = (Player) sender;
-
-                if (!player.hasPermission("blockregen.admin")) {
-                    player.sendMessage(Message.NO_PERM.get(player));
+                if (!sender.hasPermission("blockregen.admin.regions")) {
+                    Message.NO_PERM.send(sender);
                     return false;
                 }
+
+                if (checkConsole(sender)) {
+                    return false;
+                }
+
+                player = (Player) sender;
 
                 if (args.length == 1) {
                     sendHelp(sender, label);
@@ -435,6 +441,9 @@ public class Commands implements CommandExecutor {
             }
             case "regen": {
                 // /blockregen regen -p preset -w world -r region
+                if (permission(sender, "blockregen.command.regen")) {
+                    return false;
+                }
 
                 String[] workArgs = Arrays.copyOfRange(args, 1, args.length);
 
@@ -476,6 +485,10 @@ public class Commands implements CommandExecutor {
                 break;
             }
             case "debug":
+                if (permission(sender, "blockregen.command.debug")) {
+                    return false;
+                }
+
                 if (!(sender instanceof Player)) {
                     sender.sendMessage(Message.ONLY_PLAYERS.get());
                     return false;
@@ -502,12 +515,15 @@ public class Commands implements CommandExecutor {
                 }
                 break;
             case "discord":
+                if (permission(sender, "blockregen.command.discord")) {
+                    return false;
+                }
+
                 sender.sendMessage(StringUtil.color("&8&m      &3 BlockRegen Discord Server" +
                         "\n&6>> &7https://discord.gg/ZCxMca5"));
                 break;
             case "events":
-                if (!sender.hasPermission("blockregen.admin")) {
-                    sender.sendMessage(Message.NO_PERM.get());
+                if (permission(sender, "blockregen.command.events")) {
                     return false;
                 }
 
@@ -578,6 +594,14 @@ public class Commands implements CommandExecutor {
                 break;
             default:
                 sendHelp(sender, label);
+        }
+        return false;
+    }
+
+    private boolean permission(CommandSender sender, String permission) {
+        if (!sender.hasPermission(permission)) {
+            sender.sendMessage(Message.NO_PERM.get());
+            return true;
         }
         return false;
     }
