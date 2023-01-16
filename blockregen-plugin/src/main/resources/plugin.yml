@@ -9,12 +9,37 @@ commands:
     aliases: [ br, bregen, blockr, breg, brg ]
     description: Main plugin command
 permissions:
-  blockregen.admin:
-    description: Gives access to admin commands
-  blockregen.bypass:
-    description: Allows player to use the bypass
-  blockregen.datacheck:
-    description: Allows player to use the data check
+  blockregen.command:
+    default: false
+  blockregen.command.*:
+    default: false
+  blockregen.command.reload:
+    default: false
+    description: Allow the use of reload command and its subcommands
+  blockregen.command.bypass:
+    default: false
+    description: Allow the use of bypass command and its subcommands
+  blockregen.command.check:
+    default: false
+    description: Allow the use of check command and its subcommands
+  blockregen.command.tools:
+    default: false
+    description: Allow the use of tools command and its subcommands
+  blockregen.command.regions:
+    default: false
+    description: Allow the use of regions command and its subcommands
+  blockregen.command.regen:
+    default: false
+    description: Allow the use of regen command and its subcommands
+  blockregen.command.debug:
+    default: false
+    description: Allow the use of debug command and its subcommands
+  blockregen.command.discord:
+    default: false
+    description: Allow the use of discord command and its subcommands
+  blockregen.command.events:
+    default: false
+    description: Allow the use of events command and its subcommands
   blockregen.block.*:
     default: true
     description: Gives player the ability to mine ores

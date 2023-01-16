@@ -21,7 +21,7 @@ public class RegenerationManager {
 
     private final BlockRegen plugin;
 
-    private final List<RegenerationProcess> cache = new ArrayList<>();
+    private final Set<RegenerationProcess> cache = new HashSet<>();
 
     @Getter
     private AutoSaveTask autoSaveTask;
@@ -185,32 +185,31 @@ public class RegenerationManager {
         cache.forEach(process -> process.revertBlock(synchronize));
     }
 
-    private void purgeExpired() {
-
-        // Clear invalid processes
-        for (RegenerationProcess process : new HashSet<>(cache)) {
-
-            if (process == null)
-                continue;
-
-            if (process.getTimeLeft() < 0)
-                process.regenerateBlock();
-        }
-    }
-
     public void save() {
         save(false);
     }
 
     public void save(boolean sync) {
-        cache.forEach(process -> {
-            if (process != null)
-                process.setTimeLeft(process.getRegenerationTime() - System.currentTimeMillis());
-        });
 
-        purgeExpired();
+        Iterator<RegenerationProcess> it = this.cache.iterator();
 
-        final List<RegenerationProcess> finalCache = new ArrayList<>(cache);
+        while (it.hasNext()) {
+            RegenerationProcess process = it.next();
+
+            if (process == null) {
+                continue;
+            }
+
+            process.setTimeLeft(process.getRegenerationTime() - System.currentTimeMillis());
+
+            if (process.getTimeLeft() < 0) {
+                log.fine(String.format("Regenerated process %s when saving, time ran out.", process.getLocation().toString()));
+                process.regenerateBlock();
+                it.remove();
+            }
+        }
+
+        final List<RegenerationProcess> finalCache = new ArrayList<>(this.cache);
 
         log.fine("Saving " + finalCache.size() + " regeneration processes..");
 
@@ -235,6 +234,12 @@ public class RegenerationManager {
                         loadedProcesses = new ArrayList<>();
 
                     for (RegenerationProcess process : loadedProcesses) {
+
+                        // Process cannot be loaded from json
+                        if (process == null) {
+                            log.warning("Encountered a process that could not be loaded (or saved) properly. Skipping.");
+                            continue;
+                        }
 
                         if (!process.convertLocation()) {
                             this.retry = true;
@@ -271,7 +276,7 @@ public class RegenerationManager {
         this.retry = false;
     }
 
-    public List<RegenerationProcess> getCache() {
-        return Collections.unmodifiableList(cache);
+    public Set<RegenerationProcess> getCache() {
+        return Collections.unmodifiableSet(cache);
     }
 }
