@@ -14,16 +14,21 @@ public class BlockRegenBlockEvent extends BlockEvent {
 
     private static final HandlerList HANDLERS = new HandlerList();
 
-    @Override
-    public @NotNull HandlerList getHandlers() {
-        return HANDLERS;
-    }
-
     @Getter
     private final BlockPreset blockPreset;
 
     public BlockRegenBlockEvent(Block block, BlockPreset blockPreset) {
         super(block);
         this.blockPreset = blockPreset;
+    }
+
+    public static HandlerList getHandlerList() {
+        return HANDLERS;
+    }
+
+
+    @Override
+    public @NotNull HandlerList getHandlers() {
+        return HANDLERS;
     }
 }
