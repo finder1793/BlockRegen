@@ -142,7 +142,9 @@ public class BlockListener implements Listener {
             if (residence != null) {
                 ResidencePermissions permissions = residence.getPermissions();
 
-                if (!permissions.playerHas(player, Flags.build, true)) {
+                // has neither build nor destroy
+                // let residence run its protection
+                if (!permissions.playerHas(player, Flags.destroy, true) && !permissions.playerHas(player, Flags.build, true)) {
                     log.fine("Let Residence handle this.");
                     return;
                 }
@@ -211,7 +213,7 @@ public class BlockListener implements Listener {
         // Check conditions
         if (!preset.getConditions().check(player)) {
             event.setCancelled(true);
-            log.info("Player doesn't meet conditions.");
+            log.fine("Player doesn't meet conditions.");
             return;
         }
 
