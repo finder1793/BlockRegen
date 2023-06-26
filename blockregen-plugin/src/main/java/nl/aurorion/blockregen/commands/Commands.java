@@ -69,7 +69,7 @@ public class Commands implements CommandExecutor {
 
         switch (args[0].toLowerCase()) {
             case "reload":
-                if (!sender.hasPermission("blockregen.admin")) {
+                if (!sender.hasPermission("blockregen.reload")) {
                     Message.NO_PERM.send(sender);
                     return false;
                 }
@@ -94,12 +94,13 @@ public class Commands implements CommandExecutor {
                 }
                 break;
             case "check":
-                if (checkConsole(sender))
+                if (checkConsole(sender)) {
                     return false;
+                }
 
                 player = (Player) sender;
 
-                if (!player.hasPermission("blockregen.datacheck")) {
+                if (!player.hasPermission("blockregen.check")) {
                     Message.NO_PERM.send(player);
                     return false;
                 }
@@ -116,6 +117,11 @@ public class Commands implements CommandExecutor {
                 }
 
                 player = (Player) sender;
+
+                if (!player.hasPermission("blockregen.tools")) {
+                    Message.NO_PERM.send(player);
+                    return false;
+                }
 
                 ItemStack shovel = XMaterial.WOODEN_SHOVEL.parseItem();
 
@@ -148,6 +154,11 @@ public class Commands implements CommandExecutor {
 
                 player = (Player) sender;
 
+                if (!player.hasPermission("blockregen.region")) {
+                    Message.NO_PERM.send(player);
+                    return false;
+                }
+
                 if (args.length > 1) {
                     sender.sendMessage(Message.TOO_MANY_ARGS.get(player)
                             .replace("%help%", String.format("/%s regions", label)));
@@ -179,7 +190,7 @@ public class Commands implements CommandExecutor {
 
                 player = (Player) sender;
 
-                if (!player.hasPermission("blockregen.admin")) {
+                if (!player.hasPermission("blockregen.region")) {
                     player.sendMessage(Message.NO_PERM.get(player));
                     return false;
                 }
@@ -436,6 +447,11 @@ public class Commands implements CommandExecutor {
             case "regen": {
                 // /blockregen regen -p preset -w world -r region
 
+                if (!sender.hasPermission("blockregen.regen")) {
+                    Message.NO_PERM.send(sender);
+                    return false;
+                }
+
                 String[] workArgs = Arrays.copyOfRange(args, 1, args.length);
 
                 BlockPreset preset = null;
@@ -476,6 +492,11 @@ public class Commands implements CommandExecutor {
                 break;
             }
             case "debug":
+                if (!sender.hasPermission("blockregen.debug")) {
+                    Message.NO_PERM.send(sender);
+                    return false;
+                }
+
                 if (!(sender instanceof Player)) {
                     sender.sendMessage(Message.ONLY_PLAYERS.get());
                     return false;
@@ -502,11 +523,16 @@ public class Commands implements CommandExecutor {
                 }
                 break;
             case "discord":
+                if (!sender.hasPermission("blockregen.admin")) {
+                    Message.NO_PERM.send(sender);
+                    return false;
+                }
+
                 sender.sendMessage(StringUtil.color("&8&m      &3 BlockRegen Discord Server" +
                         "\n&6>> &7https://discord.gg/ZCxMca5"));
                 break;
             case "events":
-                if (!sender.hasPermission("blockregen.admin")) {
+                if (!sender.hasPermission("blockregen.events")) {
                     sender.sendMessage(Message.NO_PERM.get());
                     return false;
                 }
@@ -576,8 +602,9 @@ public class Commands implements CommandExecutor {
                     }
                 }
                 break;
-            default:
+            default: {
                 sendHelp(sender, label);
+            }
         }
         return false;
     }

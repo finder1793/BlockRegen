@@ -10,15 +10,35 @@ commands:
     description: Main plugin command
 permissions:
   blockregen.admin:
-    description: Gives access to admin commands
+    description: Gives access to admin commands.
+    default: op
+    children:
+      blockregen.tools: true
+      blockregen.debug: true
+      blockregen.bypass: true
+      blockregen.check: true
+      blockregen.select: true
+      blockregen.region: true
+      blockregen.regen: true
+      blockregen.events: true
+
+  blockregen.tools:
+    description: Allows player to get tools.
+  blockregen.debug:
+    description: Allows player to get tools.
   blockregen.bypass:
-    description: Allows player to use the bypass
-  blockregen.datacheck:
-    description: Allows player to use the data check
+    description: Allows player to use the bypass.
+  blockregen.check:
+    description: Allows player to use the block check.
+  blockregen.select:
+    description: Allows player to select locations for regions.
+  blockregen.region:
+    description: Allows player to select presets for regions.
+  blockregen.regen:
+    description: Allows player to regenerate running processes.
+  blockregen.events:
+    description: Allows access to event commands.
+
   blockregen.block.*:
     default: true
-    description: Gives player the ability to mine ores
-  blockregen.select:
-    description: Allows player to select locations for regions
-  blockregen.region:
-    description: Allows player to select presets for regions
+    description: Gives player the ability to mine ores.
