@@ -4,7 +4,7 @@
 
     <groupId>nl.aurorion.blockregen</groupId>
     <artifactId>BlockRegen</artifactId>
-    <version>3.10.7</version>
+    <version>3.10.8</version>
     <modules>
         <module>blockregen-version</module>
         <module>blockregen-common</module>
@@ -54,8 +54,8 @@
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
         </repository>
         <repository>
-            <id>devport-dependencies</id>
-            <url>https://nexus.devport.space/dependencies</url>
+            <id>sonatype</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
         </repository>
         <repository>
             <id>placeholderapi</id>
@@ -70,7 +70,7 @@
     <dependencies>
         <!-- Vault -->
         <dependency>
-            <groupId>net.milkbowl.vault</groupId>
+            <groupId>com.github.MilkBowl</groupId>
             <artifactId>VaultAPI</artifactId>
             <version>1.7</version>
             <exclusions>
@@ -84,20 +84,20 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.26</version>
+            <version>1.18.34</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>
-            <version>24.0.1</version>
+            <version>24.1.0</version>
             <scope>compile</scope>
         </dependency>
         <!-- Official XSeries release -->
         <dependency>
             <groupId>com.github.cryptomorin</groupId>
             <artifactId>XSeries</artifactId>
-            <version>9.4.0</version>
+            <version>11.2.0.1</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>

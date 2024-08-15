@@ -1,10 +1,10 @@
 package nl.aurorion.blockregen.particles.impl;
 
 import com.cryptomorin.xseries.particles.ParticleDisplay;
+import com.cryptomorin.xseries.particles.Particles;
 import com.cryptomorin.xseries.particles.XParticle;
 import nl.aurorion.blockregen.particles.AbstractParticle;
 import org.bukkit.Location;
-import org.bukkit.Particle;
 import org.jetbrains.annotations.NotNull;
 
 public class WitchSpell extends AbstractParticle {
@@ -16,7 +16,7 @@ public class WitchSpell extends AbstractParticle {
 
     @Override
     public void display(@NotNull Location location) {
-        ParticleDisplay display = ParticleDisplay.simple(location.clone().add(.5, .5, .5), Particle.SPELL_WITCH);
-        XParticle.circle(.5, 10, display);
+        ParticleDisplay display = ParticleDisplay.of(XParticle.WITCH).withLocation(location.clone().add(.5, .5, .5));
+        Particles.circle(.5, 10, display);
     }
 }

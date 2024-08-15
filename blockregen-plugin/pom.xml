@@ -5,13 +5,18 @@
     <parent>
         <artifactId>BlockRegen</artifactId>
         <groupId>nl.aurorion.blockregen</groupId>
-        <version>3.10.7</version>
+        <version>3.10.8</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>blockregen-plugin</artifactId>
 
     <name>BlockRegen</name>
+
+    <properties>
+        <project.dependencies.jobs.version>5.2.4.0</project.dependencies.jobs.version>
+        <project.dependencies.residence.version>5.1.6.0</project.dependencies.residence.version>
+    </properties>
 
     <build>
         <finalName>${project.name}-${project.version}</finalName>
@@ -61,6 +66,41 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <version>3.1.2</version>
+                <executions>
+                    <execution>
+                        <id>jobs</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>install-file</goal>
+                        </goals>
+                        <configuration>
+                            <file>lib/Jobs${project.dependencies.jobs.version}.jar</file>
+                            <groupId>com.gamingmesh.jobs</groupId>
+                            <artifactId>Jobs</artifactId>
+                            <version>${project.dependencies.jobs.version}</version>
+                            <packaging>jar</packaging>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>residence</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>install-file</goal>
+                        </goals>
+                        <configuration>
+                            <file>lib/Residence${project.dependencies.residence.version}.jar</file>
+                            <groupId>com.bekvon.bukkit</groupId>
+                            <artifactId>Residence</artifactId>
+                            <version>${project.dependencies.residence.version}</version>
+                            <packaging>jar</packaging>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
@@ -76,25 +116,25 @@
         <dependency>
             <groupId>nl.aurorion.blockregen</groupId>
             <artifactId>blockregen-common</artifactId>
-            <version>3.10.7</version>
+            <version>3.10.8</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>nl.aurorion.blockregen</groupId>
             <artifactId>blockregen-version</artifactId>
-            <version>3.10.7</version>
+            <version>3.10.8</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>nl.aurorion.blockregen</groupId>
             <artifactId>blockregen-legacy</artifactId>
-            <version>3.10.7</version>
+            <version>3.10.8</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>nl.aurorion.blockregen</groupId>
             <artifactId>blockregen-ancient</artifactId>
-            <version>3.10.7</version>
+            <version>3.10.8</version>
             <scope>compile</scope>
         </dependency>
         <!-- Spigot API -->
@@ -135,7 +175,7 @@
         <dependency>
             <groupId>com.bekvon.bukkit</groupId>
             <artifactId>Residence</artifactId>
-            <version>5.0.1.5</version>
+            <version>${project.dependencies.residence.version}</version>
             <scope>provided</scope>
         </dependency>
         <!-- Placeholder API -->
@@ -163,7 +203,7 @@
         <dependency>
             <groupId>com.gamingmesh.jobs</groupId>
             <artifactId>Jobs</artifactId>
-            <version>5.0.2.1</version>
+            <version>${project.dependencies.jobs.version}</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

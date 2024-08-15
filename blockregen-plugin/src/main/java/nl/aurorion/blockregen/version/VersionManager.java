@@ -120,11 +120,19 @@ public class VersionManager {
     }
 
     public String loadNMSVersion() {
-        Pattern pattern = Pattern.compile("v\\d+_\\d+");
+        // ex.: 1.20.1-R0.1-SNAPSHOT
+        String version = Bukkit.getServer().getBukkitVersion();
 
-        Matcher matcher = pattern.matcher(Bukkit.getServer().getClass().getPackage().getName());
-        // v1_8 -> 1.8
-        return matcher.find() ? matcher.group().replace("_", ".").substring(1) : null;
+        // remove snapshot part
+        version = version.substring(0, version.indexOf("-"));
+
+        // remove patch version
+        int lastDot = version.lastIndexOf(".");
+        if (lastDot > 2) {
+            version = version.substring(0, lastDot);
+        }
+
+        return version;
     }
 
     public boolean isCurrentAbove(String versionString, boolean include) {
