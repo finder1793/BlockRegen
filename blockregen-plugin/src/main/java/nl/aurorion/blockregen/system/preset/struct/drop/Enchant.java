@@ -32,7 +32,7 @@ public class Enchant {
             String[] arr = str.split(":");
             if (arr.length == 2) {
                 enchantString = arr[0];
-                level = ParseUtil.parseInteger(arr[1], 1);
+                level = ParseUtil.parseInt(arr[1], 1);
             }
         }
 

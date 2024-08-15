@@ -70,6 +70,10 @@ Blocks:
       # The material of the dropped item.
       material: DIAMOND
 
+      # Custom model data added to the item.
+      # Works on 1.14+
+      custom-model-data: 1300
+
       # The name that is given to the dropped item
       name: "&3A little diamond"
 
