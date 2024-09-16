@@ -119,8 +119,9 @@ public class ItemDrop {
     @Nullable
     public static ItemDrop load(ConfigurationSection section, BlockPreset preset) {
 
-        if (section == null)
+        if (section == null) {
             return null;
+        }
 
         XMaterial material = ParseUtil.parseMaterial(section.getString("material"));
 

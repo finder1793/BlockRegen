@@ -67,12 +67,13 @@ public class ParseUtil {
     @Nullable
     public XMaterial parseMaterial(String input, boolean... blocksOnly) {
 
-        if (Strings.isNullOrEmpty(input))
+        if (Strings.isNullOrEmpty(input)) {
             return null;
+        }
 
         Optional<XMaterial> xMaterial = XMaterial.matchXMaterial(input);
 
-        if (!xMaterial.isPresent()) {
+        if (xMaterial.isEmpty()) {
             log.fine("Could not parse material " + input);
             return null;
         }

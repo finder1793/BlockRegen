@@ -1,16 +1,17 @@
 package nl.aurorion.blockregen.system.preset;
 
-import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.XSound;
 import com.google.common.base.Strings;
 import lombok.extern.java.Log;
 import nl.aurorion.blockregen.BlockRegen;
 import nl.aurorion.blockregen.system.event.struct.PresetEvent;
+import nl.aurorion.blockregen.system.material.parser.MaterialParser;
 import nl.aurorion.blockregen.system.preset.struct.Amount;
 import nl.aurorion.blockregen.system.preset.struct.BlockPreset;
 import nl.aurorion.blockregen.system.preset.struct.PresetConditions;
 import nl.aurorion.blockregen.system.preset.struct.PresetRewards;
 import nl.aurorion.blockregen.system.preset.struct.material.DynamicMaterial;
+import nl.aurorion.blockregen.system.preset.struct.material.TargetMaterial;
 import nl.aurorion.blockregen.system.region.struct.RegenerationRegion;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
@@ -18,10 +19,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Log
 public class PresetManager {
@@ -41,7 +39,7 @@ public class PresetManager {
     @Nullable
     public BlockPreset getPreset(@NotNull Block block) {
         for (BlockPreset preset : this.presets.values()) {
-            if (plugin.getVersionManager().getMethods().compareType(block, preset.getTargetMaterial())) {
+            if (preset.getTargetMaterial().check(preset, block)) {
                 return preset;
             }
         }
@@ -51,7 +49,7 @@ public class PresetManager {
     @Nullable
     public BlockPreset getPreset(@NotNull Block block, @NotNull RegenerationRegion region) {
         for (BlockPreset preset : this.presets.values()) {
-            if (plugin.getVersionManager().getMethods().compareType(block, preset.getTargetMaterial()) && region.hasPreset(preset.getName())) {
+            if (preset.getTargetMaterial().check(preset, block) && region.hasPreset(preset.getName())) {
                 return preset;
             }
         }
@@ -93,48 +91,45 @@ public class PresetManager {
         BlockPreset preset = new BlockPreset(name);
 
         // Target material
-        String targetMaterial = section.getString("target-material");
+        TargetMaterial targetMaterial = this.plugin.getMaterialManager().parseMaterial(section.getString("target-material", name));
 
-        if (Strings.isNullOrEmpty(targetMaterial))
-            targetMaterial = name;
-
-        Optional<XMaterial> xMaterial = XMaterial.matchXMaterial(targetMaterial.toUpperCase());
-
-        if (!xMaterial.isPresent()) {
+        if (targetMaterial == null) {
             log.warning("Could not load preset " + name + ", invalid target material.");
             return;
         }
 
-        preset.setTargetMaterial(xMaterial.get());
+        preset.setTargetMaterial(targetMaterial);
 
         // Replace material
         String replaceMaterial = section.getString("replace-block");
 
-        if (Strings.isNullOrEmpty(replaceMaterial))
+        if (Strings.isNullOrEmpty(replaceMaterial)) {
             replaceMaterial = "AIR";
+        }
 
         try {
-            preset.setReplaceMaterial(DynamicMaterial.fromString(replaceMaterial));
+            preset.setReplaceMaterial(this.loadDynamicMaterial(replaceMaterial));
         } catch (IllegalArgumentException e) {
             log.warning("Dynamic material ( " + replaceMaterial + " ) in replace-block material for " + name
                     + " is invalid: " + e.getMessage());
-            e.printStackTrace();
+            log.fine(e.toString());
             return;
         }
 
         // Regenerate into
-        String regenerateInto = section.getString("regenerate-into");
+        String regenerateIntoInput = section.getString("regenerate-into");
 
-        if (Strings.isNullOrEmpty(regenerateInto))
-            regenerateInto = targetMaterial;
-
-        try {
-            preset.setRegenMaterial(DynamicMaterial.fromString(regenerateInto));
-        } catch (IllegalArgumentException e) {
-            log.warning("Dynamic material ( " + regenerateInto + " ) in regenerate-into material for " + name
-                    + " is invalid: " + e.getMessage());
-            e.printStackTrace();
-            return;
+        if (Strings.isNullOrEmpty(regenerateIntoInput)) {
+            preset.setRegenMaterial(new DynamicMaterial(targetMaterial));
+        } else {
+            try {
+                preset.setRegenMaterial(this.loadDynamicMaterial(regenerateIntoInput));
+            } catch (IllegalArgumentException e) {
+                log.warning("Dynamic material ( " + regenerateIntoInput + " ) in regenerate-into material for " + name
+                        + " is invalid: " + e.getMessage());
+                log.fine(e.toString());
+                return;
+            }
         }
 
         // Delay
@@ -154,7 +149,7 @@ public class PresetManager {
 
         if (!Strings.isNullOrEmpty(sound)) {
             Optional<XSound> xSound = XSound.matchXSound(sound);
-            if (!xSound.isPresent()) {
+            if (xSound.isEmpty()) {
                 log.warning("Sound " + sound + " in preset " + name + " is invalid.");
             } else
                 preset.setSound(xSound.get());
@@ -207,5 +202,74 @@ public class PresetManager {
             plugin.getEventManager().addEvent(event);
 
         presets.put(name, preset);
+    }
+
+    private DynamicMaterial loadDynamicMaterial(String input) throws IllegalArgumentException {
+        if (Strings.isNullOrEmpty(input)) {
+            throw new IllegalArgumentException("Input string cannot be null");
+        }
+
+        // clear blanks?
+        input = input.replace(" ", "").trim();
+
+        List<String> materials;
+        List<TargetMaterial> valuedMaterials = new ArrayList<>();
+        TargetMaterial defaultMaterial = null;
+
+        if (!input.contains(";")) {
+            return new DynamicMaterial(this.plugin.getMaterialManager().parseMaterial(input));
+        }
+
+        materials = Arrays.asList(input.split(";"));
+
+        if (materials.isEmpty())
+            throw new IllegalArgumentException("Dynamic material " + input + " doesn't have the correct syntax");
+
+        if (materials.size() == 1) {
+            return new DynamicMaterial(this.plugin.getMaterialManager().parseMaterial(materials.getFirst()));
+        }
+
+        int total = 0;
+
+        for (String material : materials) {
+
+            // Separate parts
+            String[] parts = material.split(":");
+
+            // First either prefix or material
+
+            MaterialParser parser = this.plugin.getMaterialManager().getParser(parts[0].toLowerCase());
+
+            if (parser == null) {
+                parser = this.plugin.getMaterialManager().getParser(null);
+
+                if (parser == null) {
+                    log.fine(String.format("No valid parser found for material %s in input %s", material, input));
+                    continue;
+                }
+            } else {
+                // remove parts[0] aka the parser prefix
+                parts = Arrays.copyOfRange(parts, 1, parts.length);
+            }
+
+            TargetMaterial mat = parser.parseMaterial(parts[0]);
+
+            // chance
+            if (parts.length == 2) {
+                int chance = Integer.parseInt(parts[1]);
+
+                for (int i = 0; i < chance; ++i) {
+                    valuedMaterials.add(defaultMaterial);
+                }
+            } else {
+                defaultMaterial = mat;
+            }
+        }
+
+        if (defaultMaterial != null) {
+            for (int i = 0; i < (100 - total); i++) valuedMaterials.add(defaultMaterial);
+        }
+
+        return new DynamicMaterial(defaultMaterial, valuedMaterials);
     }
 }

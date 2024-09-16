@@ -194,3 +194,12 @@ Blocks:
       name: '&aA cute emerald'
       lores:
         - '&7Mined with &d<3 &7by &f%player%'
+
+  #### Oraxen example
+
+  caveblock:
+    # oraxen:<oraxen item id>
+    target-material: oraxen:caveblock
+    replace-block: STONE
+    regen-delay: 1
+    natural-break: false

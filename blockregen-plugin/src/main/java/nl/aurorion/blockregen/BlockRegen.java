@@ -18,6 +18,9 @@ import nl.aurorion.blockregen.particles.impl.WitchSpell;
 import nl.aurorion.blockregen.providers.JobsProvider;
 import nl.aurorion.blockregen.system.GsonHelper;
 import nl.aurorion.blockregen.system.event.EventManager;
+import nl.aurorion.blockregen.system.material.MaterialManager;
+import nl.aurorion.blockregen.system.material.parser.MinecraftMaterialParser;
+import nl.aurorion.blockregen.system.material.parser.OraxenMaterialParser;
 import nl.aurorion.blockregen.system.preset.PresetManager;
 import nl.aurorion.blockregen.system.regeneration.RegenerationManager;
 import nl.aurorion.blockregen.system.region.RegionManager;
@@ -87,6 +90,9 @@ public class BlockRegen extends JavaPlugin {
 
     @Getter
     private EventManager eventManager;
+
+    @Getter
+    private MaterialManager materialManager;
 
     @Getter
     private GsonHelper gsonHelper;
@@ -170,10 +176,14 @@ public class BlockRegen extends JavaPlugin {
         regenerationManager = new RegenerationManager(this);
         regionManager = new RegionManager(this);
         eventManager = new EventManager(this);
+        materialManager = new MaterialManager(this);
 
         Message.load();
 
         checkDependencies(false);
+
+        materialManager.registerParser(null, new MinecraftMaterialParser(this));
+        materialManager.registerParser("oraxen", new OraxenMaterialParser(this));
 
         presetManager.loadAll();
         regionManager.load();
