@@ -33,6 +33,7 @@ public class MaterialManager {
      */
     public void registerParser(@Nullable String prefix, @NotNull MaterialParser parser) {
         registeredParsers.put((prefix == null ? null : prefix.toLowerCase()), parser);
+        log.fine(String.format("Registered material parser with prefix %s", prefix));
     }
 
     public MaterialParser getParser(@Nullable String prefix) {

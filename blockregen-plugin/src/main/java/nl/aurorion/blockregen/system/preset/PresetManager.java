@@ -90,15 +90,23 @@ public class PresetManager {
 
         BlockPreset preset = new BlockPreset(name);
 
-        // Target material
-        TargetMaterial targetMaterial = this.plugin.getMaterialManager().parseMaterial(section.getString("target-material", name));
+        String targetMaterialInput = section.getString("target-material", name);
 
-        if (targetMaterial == null) {
+        TargetMaterial targetMaterial;
+        // Target material
+        try {
+            targetMaterial = this.plugin.getMaterialManager().parseMaterial(targetMaterialInput);
+
+            if (targetMaterial == null) {
+                log.warning("Could not load preset " + name + ", invalid target material.");
+                return;
+            }
+
+            preset.setTargetMaterial(targetMaterial);
+        } catch (IllegalArgumentException e) {
             log.warning("Could not load preset " + name + ", invalid target material.");
             return;
         }
-
-        preset.setTargetMaterial(targetMaterial);
 
         // Replace material
         String replaceMaterial = section.getString("replace-block");
@@ -112,7 +120,6 @@ public class PresetManager {
         } catch (IllegalArgumentException e) {
             log.warning("Dynamic material ( " + replaceMaterial + " ) in replace-block material for " + name
                     + " is invalid: " + e.getMessage());
-            log.fine(e.toString());
             return;
         }
 
@@ -127,7 +134,6 @@ public class PresetManager {
             } catch (IllegalArgumentException e) {
                 log.warning("Dynamic material ( " + regenerateIntoInput + " ) in regenerate-into material for " + name
                         + " is invalid: " + e.getMessage());
-                log.fine(e.toString());
                 return;
             }
         }
@@ -222,8 +228,9 @@ public class PresetManager {
 
         materials = Arrays.asList(input.split(";"));
 
-        if (materials.isEmpty())
+        if (materials.isEmpty()) {
             throw new IllegalArgumentException("Dynamic material " + input + " doesn't have the correct syntax");
+        }
 
         if (materials.size() == 1) {
             return new DynamicMaterial(this.plugin.getMaterialManager().parseMaterial(materials.getFirst()));
