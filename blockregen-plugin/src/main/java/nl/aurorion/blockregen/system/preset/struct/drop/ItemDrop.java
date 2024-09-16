@@ -23,43 +23,38 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Getter
 @Log
 public class ItemDrop {
 
-    @Getter
     private final XMaterial material;
 
-    @Getter
     @Setter
     private Amount amount = new Amount(1);
 
-    @Getter
     @Setter
     private String displayName;
 
-    @Getter
     @Setter
     private List<String> lore = new ArrayList<>();
 
-    @Getter
     @Setter
     private Set<Enchant> enchants = new HashSet<>();
 
-    @Getter
     @Setter
     private Set<ItemFlag> itemFlags = new HashSet<>();
 
-    @Getter
     @Setter
     private boolean dropNaturally = true;
 
-    @Getter
     @Setter
     private ExperienceDrop experienceDrop;
 
-    @Getter
     @Setter
     private Amount chance;
+
+    @Setter
+    private Integer customModelData;
 
     public ItemDrop(XMaterial material) {
         this.material = material;
@@ -108,6 +103,14 @@ public class ItemDrop {
         enchants.forEach(enchant -> enchant.apply(itemMeta));
         itemMeta.addItemFlags(itemFlags.toArray(new ItemFlag[0]));
 
+        // On 1.14+, apply custom model data
+        if (BlockRegen.getInstance().getVersionManager().useCustomModelData()) {
+            // Add PDC with custom model data
+            if (customModelData != null) {
+                itemMeta.setCustomModelData(customModelData);
+            }
+        }
+
         itemStack.setItemMeta(itemMeta);
 
         return itemStack;
@@ -116,8 +119,9 @@ public class ItemDrop {
     @Nullable
     public static ItemDrop load(ConfigurationSection section, BlockPreset preset) {
 
-        if (section == null)
+        if (section == null) {
             return null;
+        }
 
         XMaterial material = ParseUtil.parseMaterial(section.getString("material"));
 
@@ -142,6 +146,8 @@ public class ItemDrop {
 
         drop.setExperienceDrop(ExperienceDrop.load(section.getConfigurationSection("exp"), drop));
         drop.setChance(Amount.load(section, "chance", 100));
+
+        drop.setCustomModelData(ParseUtil.parseInteger(section.getString("custom-model-data")));
 
         return drop;
     }

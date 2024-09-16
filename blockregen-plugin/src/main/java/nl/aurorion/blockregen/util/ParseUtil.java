@@ -20,7 +20,7 @@ public class ParseUtil {
     /**
      * Attempt to parse an integer, return -1 if a NumberFormatException was thrown.
      */
-    public int parseInteger(String input, int def) {
+    public int parseInt(String input, int def) {
         try {
             return Integer.parseInt(input.trim());
         } catch (NumberFormatException exception) {
@@ -28,8 +28,20 @@ public class ParseUtil {
         }
     }
 
-    public int parseInteger(String input) {
-        return parseInteger(input, -1);
+    public Integer parseInteger(@Nullable String input) {
+        if (input == null) {
+            return null;
+        }
+
+        try {
+            return Integer.parseInt(input.trim());
+        } catch (NumberFormatException exception) {
+            return null;
+        }
+    }
+
+    public int parseInt(String input) {
+        return parseInt(input, -1);
     }
 
     @Nullable
@@ -55,12 +67,13 @@ public class ParseUtil {
     @Nullable
     public XMaterial parseMaterial(String input, boolean... blocksOnly) {
 
-        if (Strings.isNullOrEmpty(input))
+        if (Strings.isNullOrEmpty(input)) {
             return null;
+        }
 
         Optional<XMaterial> xMaterial = XMaterial.matchXMaterial(input);
 
-        if (!xMaterial.isPresent()) {
+        if (xMaterial.isEmpty()) {
             log.fine("Could not parse material " + input);
             return null;
         }

@@ -34,6 +34,7 @@ public class PresetEvent {
 
     @Getter
     @Setter
+    @Nullable
     private ItemDrop item;
 
     @Getter

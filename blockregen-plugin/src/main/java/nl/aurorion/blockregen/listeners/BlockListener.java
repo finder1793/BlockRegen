@@ -330,10 +330,8 @@ public class BlockListener implements Listener {
                     if (presetEvent.getItem() != null) {
                         ItemDrop eventDrop = presetEvent.getItem();
 
-                        if (eventDrop != null) {
-                            ItemStack eventStack = eventDrop.toItemStack(player);
-                            giveItem(eventStack, player, block, eventDrop.isDropNaturally());
-                        }
+                        ItemStack eventStack = eventDrop.toItemStack(player);
+                        giveItem(eventStack, player, block, eventDrop.isDropNaturally());
                     }
 
                     // Add items from presetEvent
@@ -363,7 +361,6 @@ public class BlockListener implements Listener {
 
             // Particles
             // -------------------------------------------------------------------------------------------
-            // TODO: Make particles work on 1.8 with it's effect API.
             if (preset.getParticle() != null && plugin.getVersionManager().isCurrentAbove("1.8", false))
                 Bukkit.getScheduler().runTask(plugin,
                         () -> plugin.getParticleManager().displayParticle(preset.getParticle(), block));

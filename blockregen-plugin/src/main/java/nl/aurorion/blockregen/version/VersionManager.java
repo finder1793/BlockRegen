@@ -22,9 +22,6 @@ import nl.aurorion.blockregen.version.legacy.LegacyWorldGuardProvider;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 @Log
 public class VersionManager {
 
@@ -45,6 +42,9 @@ public class VersionManager {
 
     @Getter
     private NodeDataProvider nodeProvider;
+
+    // 1.14+
+    private boolean customModelData = false;
 
     public VersionManager(BlockRegen plugin) {
         this.plugin = plugin;
@@ -84,6 +84,8 @@ public class VersionManager {
                 break;
             case "1.13":
             case "1.14":
+                // 1.14 introduced custom model data NBTTag.
+                this.customModelData = true;
             case "1.15":
             case "1.16":
             case "1.17":
@@ -172,5 +174,9 @@ public class VersionManager {
 
         this.worldGuard = (WorldGuardPlugin) worldGuardPlugin;
         log.info("WorldGuard found! &aSupporting it's Region protection.");
+    }
+
+    public boolean useCustomModelData() {
+        return customModelData;
     }
 }

@@ -18,6 +18,10 @@ import nl.aurorion.blockregen.particles.impl.WitchSpell;
 import nl.aurorion.blockregen.providers.JobsProvider;
 import nl.aurorion.blockregen.system.GsonHelper;
 import nl.aurorion.blockregen.system.event.EventManager;
+import nl.aurorion.blockregen.system.material.MaterialManager;
+import nl.aurorion.blockregen.system.material.parser.MMOItemsMaterialParser;
+import nl.aurorion.blockregen.system.material.parser.MinecraftMaterialParser;
+import nl.aurorion.blockregen.system.material.parser.OraxenMaterialParser;
 import nl.aurorion.blockregen.system.preset.PresetManager;
 import nl.aurorion.blockregen.system.regeneration.RegenerationManager;
 import nl.aurorion.blockregen.system.region.RegionManager;
@@ -87,6 +91,9 @@ public class BlockRegen extends JavaPlugin {
 
     @Getter
     private EventManager eventManager;
+
+    @Getter
+    private MaterialManager materialManager;
 
     @Getter
     private GsonHelper gsonHelper;
@@ -170,9 +177,11 @@ public class BlockRegen extends JavaPlugin {
         regenerationManager = new RegenerationManager(this);
         regionManager = new RegionManager(this);
         eventManager = new EventManager(this);
+        materialManager = new MaterialManager(this);
 
         Message.load();
 
+        materialManager.registerParser(null, new MinecraftMaterialParser(this));
         checkDependencies(false);
 
         presetManager.loadAll();
@@ -208,8 +217,9 @@ public class BlockRegen extends JavaPlugin {
         Bukkit.getScheduler().runTaskLater(this, () -> {
             checkDependencies(true);
 
-            if (getConfig().getBoolean("Auto-Save.Enabled", false))
+            if (getConfig().getBoolean("Auto-Save.Enabled", false)) {
                 regenerationManager.startAutoSave();
+            }
 
             regenerationManager.reattemptLoad();
             regionManager.reattemptLoad();
@@ -274,6 +284,22 @@ public class BlockRegen extends JavaPlugin {
         setupResidence();
         setupGriefPrevention();
         setupPlaceholderAPI();
+        setupMaterialParsers(reloadPresets);
+    }
+
+    private void setupMaterialParsers(boolean reloadPresets) {
+        if (getServer().getPluginManager().isPluginEnabled("Oraxen")) {
+            materialManager.registerParser("oraxen", new OraxenMaterialParser(this));
+        }
+
+        if (getServer().getPluginManager().isPluginEnabled("MMOItems")) {
+            materialManager.registerParser("mmoitems", new MMOItemsMaterialParser(this));
+        }
+
+        if (reloadPresets) {
+            log.info("Reloading presets to add material parsers requirements...");
+            this.presetManager.loadAll();
+        }
     }
 
     private void setupEconomy() {
