@@ -83,9 +83,9 @@ public class VersionManager {
                 this.nodeProvider = LegacyNodeData::new;
                 break;
             case "1.13":
+                break;
             case "1.14":
                 // 1.14 introduced custom model data NBTTag.
-                this.customModelData = true;
             case "1.15":
             case "1.16":
             case "1.17":
@@ -97,6 +97,7 @@ public class VersionManager {
                     useWorldGuard(new LatestWorldGuardProvider(this.worldGuard));
                 this.methods = new LatestMethods();
                 this.nodeProvider = LatestNodeData::new;
+                this.customModelData = true;
                 break;
         }
     }

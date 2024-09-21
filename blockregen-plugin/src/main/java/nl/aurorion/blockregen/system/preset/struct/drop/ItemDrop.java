@@ -108,6 +108,7 @@ public class ItemDrop {
             // Add PDC with custom model data
             if (customModelData != null) {
                 itemMeta.setCustomModelData(customModelData);
+                log.fine(String.format("Setting custom model data of %d", customModelData));
             }
         }
 
