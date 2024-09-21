@@ -40,9 +40,13 @@ public class MaterialManager {
         return this.registeredParsers.get((prefix == null ? null : prefix.toLowerCase()));
     }
 
-    // Parse a material from a String input (<prefix:?><material input>)
-    // Ignores chance in dynamic materials
-    // All prefixes are case-insensitive
+    /**
+     * Parse a material using registered parsers.
+     *
+     * @param input Input string, format (prefix:?)(material-name)
+     * @return Parsed material or null when no parser was found.
+     * @throws IllegalArgumentException When the parser is unable to parse the material.
+     */
     public @Nullable TargetMaterial parseMaterial(@NotNull String input) throws IllegalArgumentException {
         // Separate parts
         String[] parts = input.split(":");

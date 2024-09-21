@@ -92,19 +92,17 @@ public class PresetManager {
 
         String targetMaterialInput = section.getString("target-material", name);
 
-        TargetMaterial targetMaterial;
         // Target material
+        TargetMaterial targetMaterial;
         try {
             targetMaterial = this.plugin.getMaterialManager().parseMaterial(targetMaterialInput);
-
             if (targetMaterial == null) {
-                log.warning("Could not load preset " + name + ", invalid target material.");
+                log.warning(String.format("Could not load preset %s, invalid target material %s.", name, targetMaterialInput));
                 return;
             }
-
             preset.setTargetMaterial(targetMaterial);
         } catch (IllegalArgumentException e) {
-            log.warning("Could not load preset " + name + ", invalid target material.");
+            log.warning(String.format("Could not load preset %s, invalid target material %s.", name, targetMaterialInput));
             return;
         }
 
