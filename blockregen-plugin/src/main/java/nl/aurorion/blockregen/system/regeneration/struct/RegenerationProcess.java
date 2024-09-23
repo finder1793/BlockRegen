@@ -10,6 +10,7 @@ import nl.aurorion.blockregen.api.BlockRegenBlockRegenerationEvent;
 import nl.aurorion.blockregen.system.preset.struct.BlockPreset;
 import nl.aurorion.blockregen.system.preset.struct.material.TargetMaterial;
 import nl.aurorion.blockregen.util.LocationUtil;
+import nl.aurorion.blockregen.util.ThreadUtil;
 import nl.aurorion.blockregen.version.api.NodeData;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -142,8 +143,9 @@ public class RegenerationProcess implements Runnable {
     public void regenerate() {
 
         // Cancel the task if running.
-        if (task != null)
+        if (task != null) {
             task.cancel();
+        }
 
         BlockRegen plugin = BlockRegen.getInstance();
 
@@ -153,8 +155,9 @@ public class RegenerationProcess implements Runnable {
 
         plugin.getRegenerationManager().removeProcess(this);
 
-        if (blockRegenBlockRegenEvent.isCancelled())
+        if (blockRegenBlockRegenEvent.isCancelled()) {
             return;
+        }
 
         regenerateBlock();
 
@@ -180,7 +183,7 @@ public class RegenerationProcess implements Runnable {
             return;
         }
 
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        ThreadUtil.synchronize(plugin, () -> {
             regenerateInto.place(block);
             this.originalData.place(block); // Apply data
             log.fine("Regenerated " + this);
@@ -205,26 +208,16 @@ public class RegenerationProcess implements Runnable {
         }
     }
 
-    public void revertBlock() {
-        revertBlock(true);
-    }
-
     // Revert block to original state
-    public void revertBlock(boolean synchronize) {
+    public void revertBlock() {
         Material material = originalMaterial.parseMaterial();
 
         if (material != null) {
-            if (synchronize) {
-                Bukkit.getScheduler().runTask(BlockRegen.getInstance(), () -> {
-                    block.setType(material);
-                    originalData.place(this.block);
-                    log.fine(String.format("Reverted block for %s", this));
-                });
-            } else {
+            ThreadUtil.synchronize(BlockRegen.getInstance(), () -> {
                 block.setType(material);
                 originalData.place(this.block);
                 log.fine(String.format("Reverted block for %s", this));
-            }
+            });
         }
     }
 
@@ -244,7 +237,7 @@ public class RegenerationProcess implements Runnable {
         }
 
         // Prevent async chunk load.
-        Bukkit.getScheduler().runTask(BlockRegen.getInstance(), () -> this.block = location.getBlock());
+        ThreadUtil.synchronize(BlockRegen.getInstance(), () -> this.block = location.getBlock());
         return true;
     }
 

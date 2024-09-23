@@ -263,7 +263,7 @@ public class BlockRegen extends JavaPlugin {
         if (regenerationManager.getAutoSaveTask() != null)
             regenerationManager.getAutoSaveTask().stop();
 
-        regenerationManager.revertAll(false);
+        regenerationManager.revertAll();
         regenerationManager.save(true);
 
         regionManager.save();
@@ -288,15 +288,19 @@ public class BlockRegen extends JavaPlugin {
     }
 
     private void setupMaterialParsers(boolean reloadPresets) {
+        boolean newDeps = false;
+
         if (getServer().getPluginManager().isPluginEnabled("Oraxen")) {
             materialManager.registerParser("oraxen", new OraxenMaterialParser(this));
+            newDeps = true;
         }
 
         if (getServer().getPluginManager().isPluginEnabled("MMOItems")) {
             materialManager.registerParser("mmoitems", new MMOItemsMaterialParser(this));
+            newDeps = true;
         }
 
-        if (reloadPresets) {
+        if (reloadPresets && newDeps) {
             log.info("Reloading presets to add material parsers requirements...");
             this.presetManager.loadAll();
         }

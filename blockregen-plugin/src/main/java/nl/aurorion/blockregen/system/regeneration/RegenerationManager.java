@@ -176,13 +176,9 @@ public class RegenerationManager {
         }
     }
 
-    public void revertAll() {
-        revertAll(true);
-    }
-
     // Revert blocks before disabling
-    public void revertAll(boolean synchronize) {
-        cache.forEach(process -> process.revertBlock(synchronize));
+    public void revertAll() {
+        cache.forEach(RegenerationProcess::revertBlock);
     }
 
     private void purgeExpired() {
@@ -190,11 +186,13 @@ public class RegenerationManager {
         // Clear invalid processes
         for (RegenerationProcess process : new HashSet<>(cache)) {
 
-            if (process == null)
+            if (process == null) {
                 continue;
+            }
 
-            if (process.getTimeLeft() < 0)
+            if (process.getTimeLeft() < 0) {
                 process.regenerateBlock();
+            }
         }
     }
 
@@ -204,8 +202,9 @@ public class RegenerationManager {
 
     public void save(boolean sync) {
         cache.forEach(process -> {
-            if (process != null)
+            if (process != null) {
                 process.setTimeLeft(process.getRegenerationTime() - System.currentTimeMillis());
+            }
         });
 
         purgeExpired();
