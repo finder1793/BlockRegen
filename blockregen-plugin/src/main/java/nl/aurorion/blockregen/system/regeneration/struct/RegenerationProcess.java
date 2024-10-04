@@ -68,6 +68,8 @@ public class RegenerationProcess implements Runnable {
         this.preset = preset;
         this.presetName = preset.getName();
 
+        this.worldName = block.getWorld().getName();
+
         this.originalData = originalData;
         this.originalMaterial = XMaterial.matchXMaterial(block.getType());
         this.regenerateInto = preset.getRegenMaterial().get();
@@ -291,9 +293,11 @@ public class RegenerationProcess implements Runnable {
 
     @Override
     public String toString() {
-        return String.format("{task=%s; presetName=%s; block=%s; originalData=%s; originalMaterial=%s; regenerateInto=%s; replaceMaterial=%s; timeLeft=%d; regenerationTime=%d}",
+        return String.format("{task=%s; presetName=%s; worldName=%s; regionName=%s; block=%s; originalData=%s; originalMaterial=%s; regenerateInto=%s; replaceMaterial=%s; timeLeft=%d; regenerationTime=%d}",
                 task == null ? "null" : task.getTaskId(),
                 presetName,
+                worldName,
+                regionName,
                 block == null ? "null" : LocationUtil.locationToString(block.getLocation()),
                 originalData,
                 originalMaterial,

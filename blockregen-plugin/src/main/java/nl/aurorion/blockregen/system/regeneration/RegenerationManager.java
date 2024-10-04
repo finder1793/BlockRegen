@@ -74,36 +74,28 @@ public class RegenerationManager {
     /**
      * Helper for creating regeneration processes.
      */
-    public RegenerationProcess createProcess(Block block, BlockPreset preset, String... regionName) {
-        RegenerationProcess process = createProcess(block, preset);
+    public RegenerationProcess createProcess(@NotNull Block block, @NotNull BlockPreset preset, @Nullable String regionName) {
+        Objects.requireNonNull(block);
+        Objects.requireNonNull(preset);
 
-        if (process == null)
-            return null;
-
-        process.setWorldName(block.getWorld().getName());
-
-        if (regionName.length > 0)
-            process.setRegionName(regionName[0]);
-
-        return process;
-    }
-
-    /**
-     * Helper for creating regeneration processes.
-     */
-    @Nullable
-    public RegenerationProcess createProcess(Block block, BlockPreset preset) {
         // Read the original material
         NodeData nodeData = plugin.getVersionManager().createNodeData();
         nodeData.load(block);
 
-        return block == null || preset == null ? null : new RegenerationProcess(block, nodeData, preset);
+        RegenerationProcess process = new RegenerationProcess(block, nodeData, preset);
+
+        process.setWorldName(block.getWorld().getName());
+        process.setRegionName(regionName);
+
+        return process;
     }
 
     /**
      * Register the process as running.
      */
     public void registerProcess(@NotNull RegenerationProcess process) {
+        Objects.requireNonNull(process);
+
         if (cache.contains(process)) {
             log.fine(String.format("Cache already contains process for location %s", process.getLocation()));
             return;
@@ -230,10 +222,15 @@ public class RegenerationManager {
                 .thenAcceptAsync(loadedProcesses -> {
                     cache.clear();
 
-                    if (loadedProcesses == null)
+                    if (loadedProcesses == null) {
                         loadedProcesses = new ArrayList<>();
+                    }
 
                     for (RegenerationProcess process : loadedProcesses) {
+                        if (process == null) {
+                            log.warning("Failed to load a process from storage. Report this to the maintainer of the plugin.");
+                            continue;
+                        }
 
                         if (!process.convertLocation()) {
                             this.retry = true;

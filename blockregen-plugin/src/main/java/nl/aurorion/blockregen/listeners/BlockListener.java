@@ -180,7 +180,7 @@ public class BlockListener implements Listener {
         } else {
             if (isInWorld) {
                 if (preset != null) {
-                    process(plugin.getRegenerationManager().createProcess(block, preset), preset, event);
+                    process(plugin.getRegenerationManager().createProcess(block, preset, null), preset, event);
                 } else {
                     if (plugin.getConfig().getBoolean("Disable-Other-Break", false)) {
                         event.setCancelled(true);
