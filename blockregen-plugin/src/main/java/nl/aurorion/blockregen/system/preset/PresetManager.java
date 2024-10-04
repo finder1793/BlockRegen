@@ -221,7 +221,6 @@ public class PresetManager {
 
         List<String> materials;
         Map<TargetMaterial, Double> valuedMaterials = new HashMap<>();
-        TargetMaterial defaultMaterial = null;
 
         materials = Arrays.asList(input.split(";"));
 
@@ -233,6 +232,9 @@ public class PresetManager {
             log.fine(String.format("%s -> single material", input));
             return DynamicMaterial.withOnlyDefault(this.plugin.getMaterialManager().parseMaterial(materials.getFirst()));
         }
+
+        // Materials without a chance.
+        List<TargetMaterial> restMaterials = new ArrayList<>();
 
         for (String material : materials) {
 
@@ -264,10 +266,20 @@ public class PresetManager {
                 valuedMaterials.put(mat, chance / 100);
                 log.fine(String.format("Added material %s at chance %.2f%%", material, chance));
             } else {
-                defaultMaterial = mat;
+                restMaterials.add(mat);
             }
         }
 
-        return DynamicMaterial.from(defaultMaterial, valuedMaterials);
+        double rest = 1.0 - valuedMaterials.values().stream().mapToDouble(e -> e).sum();
+
+        if (restMaterials.size() == 1) {
+            valuedMaterials.put(restMaterials.getFirst(), rest);
+        } else {
+            // Split the rest of the chance between the materials.
+            double chance = rest / restMaterials.size();
+            restMaterials.forEach(mat -> valuedMaterials.put(mat, chance));
+        }
+
+        return DynamicMaterial.from(valuedMaterials);
     }
 }
