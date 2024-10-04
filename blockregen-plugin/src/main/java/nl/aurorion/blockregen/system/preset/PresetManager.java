@@ -105,6 +105,7 @@ public class PresetManager {
             log.warning(String.format("Could not load preset %s, invalid target material %s.", name, targetMaterialInput));
             return;
         }
+        log.fine(String.format("target-material: %s", preset.getTargetMaterial()));
 
         // Replace material
         String replaceMaterial = section.getString("replace-block");
@@ -120,12 +121,13 @@ public class PresetManager {
                     + " is invalid: " + e.getMessage());
             return;
         }
+        log.fine(String.format("replace-material: %s", preset.getReplaceMaterial()));
 
         // Regenerate into
         String regenerateIntoInput = section.getString("regenerate-into");
 
         if (Strings.isNullOrEmpty(regenerateIntoInput)) {
-            preset.setRegenMaterial(new DynamicMaterial(targetMaterial));
+            preset.setRegenMaterial(DynamicMaterial.withOnlyDefault(targetMaterial));
         } else {
             try {
                 preset.setRegenMaterial(this.loadDynamicMaterial(regenerateIntoInput));
@@ -135,6 +137,7 @@ public class PresetManager {
                 return;
             }
         }
+        log.fine(String.format("regenerate-into: %s", preset.getRegenMaterial()));
 
         // Delay
         preset.setDelay(Amount.load(file, "Blocks." + name + ".regen-delay", 3));
@@ -217,12 +220,8 @@ public class PresetManager {
         input = input.replace(" ", "").trim();
 
         List<String> materials;
-        List<TargetMaterial> valuedMaterials = new ArrayList<>();
+        Map<TargetMaterial, Double> valuedMaterials = new HashMap<>();
         TargetMaterial defaultMaterial = null;
-
-        if (!input.contains(";")) {
-            return new DynamicMaterial(this.plugin.getMaterialManager().parseMaterial(input));
-        }
 
         materials = Arrays.asList(input.split(";"));
 
@@ -231,10 +230,9 @@ public class PresetManager {
         }
 
         if (materials.size() == 1) {
-            return new DynamicMaterial(this.plugin.getMaterialManager().parseMaterial(materials.getFirst()));
+            log.fine(String.format("%s -> single material", input));
+            return DynamicMaterial.withOnlyDefault(this.plugin.getMaterialManager().parseMaterial(materials.getFirst()));
         }
-
-        int total = 0;
 
         for (String material : materials) {
 
@@ -261,20 +259,15 @@ public class PresetManager {
 
             // chance
             if (parts.length == 2) {
-                int chance = Integer.parseInt(parts[1]);
-
-                for (int i = 0; i < chance; ++i) {
-                    valuedMaterials.add(defaultMaterial);
-                }
+                double chance = Double.parseDouble(parts[1]);
+                // Chance in config is in %, go into <0; 1>
+                valuedMaterials.put(mat, chance / 100);
+                log.fine(String.format("Added material %s at chance %.2f%%", material, chance));
             } else {
                 defaultMaterial = mat;
             }
         }
 
-        if (defaultMaterial != null) {
-            for (int i = 0; i < (100 - total); i++) valuedMaterials.add(defaultMaterial);
-        }
-
-        return new DynamicMaterial(defaultMaterial, valuedMaterials);
+        return DynamicMaterial.from(defaultMaterial, valuedMaterials);
     }
 }

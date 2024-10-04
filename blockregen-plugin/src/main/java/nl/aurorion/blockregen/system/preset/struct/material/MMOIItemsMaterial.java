@@ -35,4 +35,11 @@ public class MMOIItemsMaterial implements TargetMaterial {
         block.setType(customState.getType(), false);
         block.setBlockData(customState.getBlockData(), false);
     }
+
+    @Override
+    public String toString() {
+        return "MMOIItemsMaterial{" +
+                "id=" + id +
+                '}';
+    }
 }
