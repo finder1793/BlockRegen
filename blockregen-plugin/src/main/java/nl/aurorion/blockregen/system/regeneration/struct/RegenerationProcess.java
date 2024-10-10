@@ -13,16 +13,19 @@ import nl.aurorion.blockregen.util.LocationUtil;
 import nl.aurorion.blockregen.util.ThreadUtil;
 import nl.aurorion.blockregen.version.api.NodeData;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.Objects;
+import java.util.UUID;
 
 @Log
 @Data
+// TODO: Move all the logic into the manager. Use this only as a data structure.
 public class RegenerationProcess implements Runnable {
+
+    private final UUID id = UUID.randomUUID();
 
     private SimpleLocation location;
 
@@ -63,7 +66,7 @@ public class RegenerationProcess implements Runnable {
 
     public RegenerationProcess(Block block, NodeData originalData, BlockPreset preset) {
         this.block = block;
-        this.location = new SimpleLocation(block.getLocation());
+        this.location = new SimpleLocation(block);
 
         this.preset = preset;
         this.presetName = preset.getName();
@@ -78,15 +81,17 @@ public class RegenerationProcess implements Runnable {
 
     public TargetMaterial getRegenerateInto() {
         // Make sure we always get something.
-        if (regenerateInto == null)
+        if (regenerateInto == null) {
             this.regenerateInto = preset.getRegenMaterial().get();
+        }
         return regenerateInto;
     }
 
     public TargetMaterial getReplaceMaterial() {
         // Make sure we always get something.
-        if (replaceMaterial == null)
+        if (replaceMaterial == null) {
             this.replaceMaterial = preset.getReplaceMaterial().get();
+        }
         return replaceMaterial;
     }
 
@@ -164,8 +169,9 @@ public class RegenerationProcess implements Runnable {
         regenerateBlock();
 
         // Particle
-        if (preset.getRegenerationParticle() != null)
+        if (preset.getRegenerationParticle() != null) {
             plugin.getParticleManager().displayParticle(preset.getRegenerationParticle(), block);
+        }
 
         // Null the task
         this.task = null;
@@ -231,15 +237,15 @@ public class RegenerationProcess implements Runnable {
             return false;
         }
 
-        Location location = this.location.toLocation();
+        Block block = this.location.toBlock();
 
-        if (location == null) {
+        if (block == null) {
             log.severe("Could not load location for process " + this + ", world is invalid or not loaded.");
             return false;
         }
 
         // Prevent async chunk load.
-        ThreadUtil.synchronize(BlockRegen.getInstance(), () -> this.block = location.getBlock());
+        ThreadUtil.synchronize(BlockRegen.getInstance(), () -> this.block = block);
         return true;
     }
 
@@ -271,8 +277,9 @@ public class RegenerationProcess implements Runnable {
     }
 
     public Block getBlock() {
-        if (this.block == null)
+        if (this.block == null) {
             convertLocation();
+        }
         return block;
     }
 
@@ -283,17 +290,18 @@ public class RegenerationProcess implements Runnable {
         if (o == null || getClass() != o.getClass())
             return false;
         RegenerationProcess process = (RegenerationProcess) o;
-        return location.equals(process.getLocation());
+        return process.getId().equals(this.getId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(location);
+        return Objects.hashCode(id);
     }
 
     @Override
     public String toString() {
-        return String.format("{task=%s; presetName=%s; worldName=%s; regionName=%s; block=%s; originalData=%s; originalMaterial=%s; regenerateInto=%s; replaceMaterial=%s; timeLeft=%d; regenerationTime=%d}",
+        return String.format("{id=%s; task=%s; presetName=%s; worldName=%s; regionName=%s; block=%s; originalData=%s; originalMaterial=%s; regenerateInto=%s; replaceMaterial=%s; timeLeft=%d; regenerationTime=%d}",
+                id,
                 task == null ? "null" : task.getTaskId(),
                 presetName,
                 worldName,

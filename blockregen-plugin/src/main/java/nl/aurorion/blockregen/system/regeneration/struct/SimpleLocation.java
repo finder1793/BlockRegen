@@ -2,8 +2,8 @@ package nl.aurorion.blockregen.system.regeneration.struct;
 
 import lombok.Data;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 
 import java.util.Objects;
 
@@ -11,20 +11,18 @@ import java.util.Objects;
 public class SimpleLocation {
 
     private String world;
-    private double x, y, z;
+    private int x, y, z;
 
-    public SimpleLocation(Location location) {
+    public SimpleLocation(Block block) {
 
-        if (location == null)
+        if (block == null) {
             throw new IllegalArgumentException("Location cannot be null");
+        }
 
-        if (location.getWorld() == null)
-            throw new IllegalArgumentException("Location world cannot be null");
-
-        this.world = location.getWorld().getName();
-        this.x = location.getX();
-        this.y = location.getY();
-        this.z = location.getZ();
+        this.world = block.getWorld().getName();
+        this.x = block.getX();
+        this.y = block.getY();
+        this.z = block.getZ();
     }
 
     @Override
@@ -32,9 +30,9 @@ public class SimpleLocation {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SimpleLocation that = (SimpleLocation) o;
-        return Double.compare(that.x, x) == 0 &&
-                Double.compare(that.y, y) == 0 &&
-                Double.compare(that.z, z) == 0 &&
+        return that.x == x &&
+                that.y == y &&
+                that.z == z &&
                 Objects.equals(world, that.world);
     }
 
@@ -43,8 +41,8 @@ public class SimpleLocation {
         return Objects.hash(world, x, y, z);
     }
 
-    public Location toLocation() {
+    public Block toBlock() {
         World world = Bukkit.getWorld(this.world);
-        return world == null ? null : new Location(world, x, y, z);
+        return world == null ? null : world.getBlockAt(this.x, this.y, this.z);
     }
 }

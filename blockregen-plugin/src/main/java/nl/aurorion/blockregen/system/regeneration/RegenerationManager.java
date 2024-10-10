@@ -7,7 +7,6 @@ import nl.aurorion.blockregen.system.AutoSaveTask;
 import nl.aurorion.blockregen.system.preset.struct.BlockPreset;
 import nl.aurorion.blockregen.system.regeneration.struct.RegenerationProcess;
 import nl.aurorion.blockregen.version.api.NodeData;
-import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -15,13 +14,14 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 @Log
 public class RegenerationManager {
 
     private final BlockRegen plugin;
 
-    private final List<RegenerationProcess> cache = new ArrayList<>();
+    private final ConcurrentLinkedDeque<RegenerationProcess> cache = new ConcurrentLinkedDeque<>();
 
     @Getter
     private AutoSaveTask autoSaveTask;
@@ -96,7 +96,7 @@ public class RegenerationManager {
     public void registerProcess(@NotNull RegenerationProcess process) {
         Objects.requireNonNull(process);
 
-        if (cache.contains(process)) {
+        if (this.getProcess(process.getBlock()) != null) {
             log.fine(String.format("Cache already contains process for location %s", process.getLocation()));
             return;
         }
@@ -107,25 +107,14 @@ public class RegenerationManager {
 
     @Nullable
     public RegenerationProcess getProcess(@NotNull Block block) {
-
-        Location location = block.getLocation();
-
-        for (RegenerationProcess process : new HashSet<>(getCache())) {
-
-            // Don't know why I need to do this.
-            if (process == null)
-                continue;
-
+        for (RegenerationProcess process : cache) {
             // Try to convert simple location again and exit if the block's not there.
-            if (process.getBlock() == null)
+            if (process.getBlock() == null) {
                 continue;
+            }
 
-            if (!process.getBlock().getLocation().equals(location))
+            if (!process.getBlock().equals(block)) {
                 continue;
-
-            // Try to start the process again.
-            if (process.getTimeLeft() < 0 && !process.start()) {
-                return null;
             }
 
             return process;
@@ -174,14 +163,8 @@ public class RegenerationManager {
     }
 
     private void purgeExpired() {
-
         // Clear invalid processes
         for (RegenerationProcess process : new HashSet<>(cache)) {
-
-            if (process == null) {
-                continue;
-            }
-
             if (process.getTimeLeft() < 0) {
                 process.regenerateBlock();
             }
@@ -193,12 +176,9 @@ public class RegenerationManager {
     }
 
     public void save(boolean sync) {
-        cache.forEach(process -> {
-            if (process != null) {
-                process.setTimeLeft(process.getRegenerationTime() - System.currentTimeMillis());
-            }
-        });
+        cache.forEach(process -> process.setTimeLeft(process.getRegenerationTime() - System.currentTimeMillis()));
 
+        // TODO: Shouldn't be required
         purgeExpired();
 
         final List<RegenerationProcess> finalCache = new ArrayList<>(cache);
@@ -248,9 +228,10 @@ public class RegenerationManager {
                         // Start em
                         loadedProcesses.forEach(RegenerationProcess::start);
                         log.info("Loaded " + this.cache.size() + " regeneration process(es)...");
-                    } else
+                    } else {
                         log.info(
                                 "One of the worlds is probably not loaded. Loading after complete server load instead.");
+                    }
                 }).exceptionally(e -> {
                     log.severe("Could not load processes: " + e.getMessage());
                     e.printStackTrace();
@@ -259,15 +240,17 @@ public class RegenerationManager {
     }
 
     public void reattemptLoad() {
-        if (!retry)
+        if (!retry) {
             return;
+        }
 
         load();
+
         // Override retry flag from this load.
         this.retry = false;
     }
 
-    public List<RegenerationProcess> getCache() {
-        return Collections.unmodifiableList(cache);
+    public Collection<RegenerationProcess> getCache() {
+        return Collections.unmodifiableCollection(cache);
     }
 }
