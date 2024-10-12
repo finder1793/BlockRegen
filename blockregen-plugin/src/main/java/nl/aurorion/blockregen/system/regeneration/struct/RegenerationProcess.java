@@ -10,7 +10,6 @@ import nl.aurorion.blockregen.api.BlockRegenBlockRegenerationEvent;
 import nl.aurorion.blockregen.system.preset.struct.BlockPreset;
 import nl.aurorion.blockregen.system.preset.struct.material.TargetMaterial;
 import nl.aurorion.blockregen.util.LocationUtil;
-import nl.aurorion.blockregen.util.ThreadUtil;
 import nl.aurorion.blockregen.version.api.NodeData;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -191,7 +190,7 @@ public class RegenerationProcess implements Runnable {
             return;
         }
 
-        ThreadUtil.synchronize(plugin, () -> {
+        Bukkit.getScheduler().runTask(plugin, () -> {
             regenerateInto.place(block);
             this.originalData.place(block); // Apply data
             log.fine("Regenerated " + this);
@@ -221,7 +220,7 @@ public class RegenerationProcess implements Runnable {
         Material material = originalMaterial.parseMaterial();
 
         if (material != null) {
-            ThreadUtil.synchronize(BlockRegen.getInstance(), () -> {
+            Bukkit.getScheduler().runTask(BlockRegen.getInstance(), () -> {
                 block.setType(material);
                 originalData.place(this.block);
                 log.fine(String.format("Reverted block for %s", this));
@@ -245,7 +244,7 @@ public class RegenerationProcess implements Runnable {
         }
 
         // Prevent async chunk load.
-        ThreadUtil.synchronize(BlockRegen.getInstance(), () -> this.block = block);
+        Bukkit.getScheduler().runTask(BlockRegen.getInstance(), () -> this.block = block);
         return true;
     }
 
