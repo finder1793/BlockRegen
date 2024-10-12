@@ -1,49 +1,61 @@
 # BlockRegen
-# 
-# Developer(s): Aurorion & Wertik1206
-# Version: ${project.version}
+#
+# Generated on version: ${project.version}
+# Wiki: https://github.com/Wertik/BlockRegen/wiki
 
-# Get notified when there is a new version available
+# Enable for players with `blockregen.admin` permission to get notified of a plugin update when they join.
 Update-Checker: true
 
-# Enable if you want to see more information about the plugins functions.
+# Enable debug logging in the console.
+#
+# If you cannot figure out why something doesn't work,
+# this might give you a better insight into what the plugin is doing.
 Debug-Enabled: false
 
-# If you have WorldEdit installed and wish to make and use regions then set this to true
+# Enable regions.
+#
+# Set to true if you wish to use regeneration regions (areas) instead of worlds.
+# Set to false for the plugin to regenerate blocks in whole worlds as per Worlds-Enabled.
 Use-Regions: true
 
-# Set this to true if you dont want blocks to be regenerated in Towny towns
-Towny-Support: true
-
-# Set this to true if you have issues with GriefPrevention.
-GriefPrevention-Support: true
-
-# Set this to true if you want to tolerate WorldGuard protection.
-WorldGuard-Support: true
-
-# Enable to respect Residence protection.
-Residence-Support: true
-
-# Enable Jobs rewards.
-# This triggers a manual Jobs xp and money addition, if you're getting that doubled, disable here.
-Jobs-Rewards: true
-
-# If you wish to cancel all other blocks broken besides the blocks in Blocklist.yml set this to true
+# Don't allow players to break blocks outside those configured for regeneration.
+#
+# Setting this to true protects all other blocks from being broken. No other protection is provided.
+# Setting this to false allows the players to break any other block freely.
 Disable-Other-Break: true
 
-# If you wish to cancel all other blocks broken in the region then set this to true
-Disable-Other-Break-Region: true
+# Worlds in which the plugin regenerates blocks.
+#
+# Only used when Use-Regions is set to false.
+Worlds-Enabled:
+  - world
 
-# Automatically bypass regeneration and protection when in Creative.
+# When set to true, players in creative game-mode will bypass regeneration and protection.
+# When a regenerating block is broken (aka the replace-block), the process is cancelled, and it doesn't regenerate.
 Bypass-In-Creative: true
 
-# Automatic saving for regeneration process cache.
+# Enable to manually give out Jobs rewards.
+# Sometimes this causes duplicated rewards. If that happens, disable them here.
+Jobs-Rewards: true
+
+# Setting this to true makes the plugin respect Towny protection.
+# If a block inside a town is broken and is protected against the player breaking it. Nothing will happen.
+Towny-Support: true
+
+# Setting this to true makes the plugin respect GriefPrevention protection.
+# If a block inside a protective region is broken and is protected against the player breaking it. Nothing will happen.
+GriefPrevention-Support: true
+
+# Setting this to true makes the plugin respect WorldGuard protection.
+# If a block inside a WorldGuard region is broken and is protected against the player breaking it. Nothing will happen.
+WorldGuard-Support: true
+
+# Setting this to true makes the plugin respect Residence protection.
+# If a block inside a residence is broken and is protected against the player breaking it. Nothing will happen.
+Residence-Support: true
+
+# Periodically save running regeneration processes and regions.
 Auto-Save:
   Enabled: true
   # Interval in seconds
   Interval: 600
-
-# Add the worlds you wish to use BlockRegen in to this list
-Worlds-Enabled:
-  - world
-  - world_nether
