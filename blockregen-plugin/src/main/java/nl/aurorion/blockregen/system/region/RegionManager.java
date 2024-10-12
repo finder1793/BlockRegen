@@ -12,6 +12,7 @@ import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -234,12 +235,16 @@ public class RegionManager {
     }
 
     @Nullable
+    @Contract("null -> null")
     public RegenerationRegion getRegion(@Nullable Location location) {
-        if (location == null) return null;
+        if (location == null) {
+            return null;
+        }
 
         for (RegenerationRegion region : this.loadedRegions.values()) {
-            if (region.contains(location))
+            if (region.contains(location)) {
                 return region;
+            }
         }
         return null;
     }

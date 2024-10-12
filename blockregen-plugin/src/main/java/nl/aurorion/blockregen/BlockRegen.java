@@ -200,6 +200,7 @@ public class BlockRegen extends JavaPlugin {
         log.info("&bAlways backup if you are not sure about things.");
 
         enableMetrics();
+
         if (getConfig().getBoolean("Update-Checker", false)) {
             getServer().getScheduler().runTaskLaterAsynchronously(this, () -> {
                 UpdateCheck updater = new UpdateCheck(this, 9885);

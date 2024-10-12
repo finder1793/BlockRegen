@@ -69,8 +69,9 @@ public class PresetManager {
         ConfigurationSection blocks = plugin.getFiles().getBlockList().getFileConfiguration()
                 .getConfigurationSection("Blocks");
 
-        if (blocks == null)
+        if (blocks == null) {
             return;
+        }
 
         for (String key : blocks.getKeys(false)) {
             load(key);
@@ -85,8 +86,9 @@ public class PresetManager {
 
         ConfigurationSection section = file.getConfigurationSection("Blocks." + name);
 
-        if (section == null)
+        if (section == null) {
             return;
+        }
 
         BlockPreset preset = new BlockPreset(name);
 

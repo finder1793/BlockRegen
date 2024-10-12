@@ -18,6 +18,7 @@ import nl.aurorion.blockregen.system.preset.struct.drop.ItemDrop;
 import nl.aurorion.blockregen.system.regeneration.struct.RegenerationProcess;
 import nl.aurorion.blockregen.system.region.struct.RegenerationRegion;
 import nl.aurorion.blockregen.util.ItemUtil;
+import nl.aurorion.blockregen.util.LocationUtil;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -29,9 +30,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockDropItemEvent;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Log
@@ -52,7 +51,8 @@ public class BlockListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onBreak(BlockBreakEvent event) {
 
-        // Respect cancels on higher priorities
+        // Respect cancels on higher priorities.
+        // This should technically never happen as we have ignoreCancelled = false.
         if (event.isCancelled()) {
             log.fine("Event already cancelled.");
             return;
@@ -61,32 +61,19 @@ public class BlockListener implements Listener {
         Player player = event.getPlayer();
         Block block = event.getBlock();
 
-        boolean useRegions = plugin.getConfig().getBoolean("Use-Regions", false);
-
-        BlockPreset preset;
-
-        RegenerationRegion region = plugin.getRegionManager().getRegion(block.getLocation());
-
-        if (useRegions && region != null) {
-            preset = plugin.getPresetManager().getPreset(block, region);
-        } else {
-            preset = plugin.getPresetManager().getPreset(block);
-        }
-
-        RegenerationProcess process = plugin.getRegenerationManager().getProcess(block);
-
         // Check if the block is regenerating already
-        if (process != null) {
+        RegenerationProcess existingProcess = plugin.getRegenerationManager().getProcess(block);
+        if (existingProcess != null) {
 
             // Remove the process
             if (hasBypass(player)) {
-                plugin.getRegenerationManager().removeProcess(process);
+                plugin.getRegenerationManager().removeProcess(existingProcess);
                 log.fine("Removed process in bypass.");
                 return;
             }
 
-            if (process.getRegenerationTime() > System.currentTimeMillis()) {
-                log.fine(String.format("Block is regenerating. Process: %s", process));
+            if (existingProcess.getRegenerationTime() > System.currentTimeMillis()) {
+                log.fine(String.format("Block is regenerating. Process: %s", existingProcess));
                 event.setCancelled(true);
                 return;
             }
@@ -105,6 +92,56 @@ public class BlockListener implements Listener {
             return;
         }
 
+        // If the block is protected, do nothing.
+        if (checkProtection(event)) {
+            return;
+        }
+
+        World world = block.getWorld();
+
+        boolean useRegions = plugin.getConfig().getBoolean("Use-Regions", false);
+        RegenerationRegion region = plugin.getRegionManager().getRegion(block.getLocation());
+
+        boolean isInWorld = plugin.getConfig().getStringList("Worlds-Enabled").contains(world.getName());
+        boolean isInRegion = region != null;
+
+        boolean isInZone = useRegions ? isInRegion : isInWorld;
+
+        if (!isInZone) {
+            return;
+        }
+
+        log.fine(String.format("Handling %s.", LocationUtil.locationToString(block.getLocation())));
+
+        BlockPreset preset = plugin.getPresetManager().getPreset(block);
+
+        boolean isConfigured = useRegions ? preset != null && region.hasPreset(preset.getName()) : preset != null;
+
+        if (!isConfigured) {
+            if (useRegions && preset != null && !region.hasPreset(preset.getName())) {
+                log.fine(String.format("Region %s does not have preset %s configured.", region.getName(), preset.getName()));
+            }
+
+            if (plugin.getConfig().getBoolean("Disable-Other-Break")) {
+                event.setCancelled(true);
+                log.fine(String.format("%s is not a configured preset. Denied block break.", block.getType()));
+                return;
+            }
+
+            log.fine(String.format("%s is not a configured preset.", block.getType()));
+            return;
+        }
+
+        RegenerationProcess process = plugin.getRegenerationManager().createProcess(block, preset, isInRegion ? region.getName() : null);
+        process(process, preset, event);
+    }
+
+    // Check for supported protection plugins' regions and settings.
+    // If any of them are protecting this block, allow them to handle this and do nothing.
+    private boolean checkProtection(BlockBreakEvent event) {
+        Player player = event.getPlayer();
+        Block block = event.getBlock();
+
         // Towny
         if (plugin.getConfig().getBoolean("Towny-Support", true)
                 && plugin.getServer().getPluginManager().getPlugin("Towny") != null) {
@@ -113,7 +150,7 @@ public class BlockListener implements Listener {
 
             if (townBlock != null && townBlock.hasTown()) {
                 log.fine("Let Towny handle this.");
-                return;
+                return true;
             }
         }
 
@@ -123,7 +160,7 @@ public class BlockListener implements Listener {
 
             if (noBuildReason != null) {
                 log.fine("Let GriefPrevention handle this.");
-                return;
+                return true;
             }
         }
 
@@ -133,7 +170,7 @@ public class BlockListener implements Listener {
 
             if (!plugin.getVersionManager().getWorldGuardProvider().canBreak(player, block.getLocation())) {
                 log.fine("Let WorldGuard handle this.");
-                return;
+                return true;
             }
         }
 
@@ -148,52 +185,12 @@ public class BlockListener implements Listener {
                 // let residence run its protection
                 if (!permissions.playerHas(player, Flags.destroy, true) && !permissions.playerHas(player, Flags.build, true)) {
                     log.fine("Let Residence handle this.");
-                    return;
+                    return true;
                 }
             }
         }
 
-        World world = block.getWorld();
-
-        boolean isInWorld = plugin.getConfig().getStringList("Worlds-Enabled").contains(world.getName());
-
-        if (useRegions) {
-            if (region != null) {
-                if (preset != null && region.hasPreset(preset.getName())) {
-                    process(plugin.getRegenerationManager().createProcess(block, preset, region.getName()), preset,
-                            event);
-                } else {
-                    if (preset != null && !region.hasPreset(preset.getName())) {
-                        log.fine(String.format("Region %s doesn't have preset %s added.", region.getName(), preset.getName()));
-                    }
-
-                    if (plugin.getConfig().getBoolean("Disable-Other-Break-Region")) {
-                        event.setCancelled(true);
-                        log.fine("Not a valid preset. Denied BlockBreak.");
-                        return;
-                    }
-                    log.fine("Not a valid preset.");
-                }
-            } else {
-                log.fine("Not in region.");
-            }
-        } else {
-            if (isInWorld) {
-                if (preset != null) {
-                    process(plugin.getRegenerationManager().createProcess(block, preset, null), preset, event);
-                } else {
-                    if (plugin.getConfig().getBoolean("Disable-Other-Break", false)) {
-                        event.setCancelled(true);
-                        log.fine("Not a valid preset. Denied BlockBreak.");
-                        return;
-                    }
-                    log.fine("Not a valid preset.");
-                }
-            } else {
-                log.fine(String.format("Not in world. World: %s, enabled: %s", world.getName(),
-                        plugin.getConfig().getStringList("Worlds-Enabled")));
-            }
-        }
+        return false;
     }
 
     private void process(RegenerationProcess process, BlockPreset preset, BlockBreakEvent event) {
@@ -229,8 +226,9 @@ public class BlockListener implements Listener {
             return;
         }
 
-        final AtomicInteger expToDrop = new AtomicInteger(event.getExpToDrop());
+        final AtomicInteger vanillaExperience = new AtomicInteger(event.getExpToDrop());
 
+        // We're dropping the items ourselves.
         if (plugin.getVersionManager().isCurrentAbove("1.8", false)) {
             event.setDropItems(false);
             log.fine("Cancelled BlockDropItemEvent");
@@ -241,6 +239,7 @@ public class BlockListener implements Listener {
         List<ItemStack> vanillaDrops = new ArrayList<>(
                 block.getDrops(plugin.getVersionManager().getMethods().getItemInMainHand(player)));
 
+        // Cancels item drops below 1.8.
         if (plugin.getVersionManager().isCurrentBelow("1.8", true)) {
             block.setType(Material.AIR);
         }
@@ -250,30 +249,14 @@ public class BlockListener implements Listener {
 
         // Run rewards async
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            Map<ItemStack, Boolean> drops = new HashMap<>();
+            int experience = 0;
 
-            // Events
-            // ---------------------------------------------------------------------------------------------
-
-            boolean doubleDrops = false;
-            boolean doubleExp = false;
-
-            PresetEvent presetEvent = plugin.getEventManager().getEvent(preset.getName());
-
-            if (presetEvent != null && presetEvent.isEnabled()) {
-                doubleDrops = presetEvent.isDoubleDrops();
-                doubleExp = presetEvent.isDoubleExperience();
-            }
-
-            Collection<ItemStack> drops = new ArrayList<>();
-
-            // Drop Section
-            // -----------------------------------------------------------------------------------------
+            // Items and exp
             if (preset.isNaturalBreak()) {
 
                 for (ItemStack drop : vanillaDrops) {
                     XMaterial mat = XMaterial.matchXMaterial(drop);
-                    int amount = drop.getAmount();
-
                     ItemStack item = mat.parseItem();
 
                     if (item == null) {
@@ -281,19 +264,10 @@ public class BlockListener implements Listener {
                         continue;
                     }
 
-                    item.setAmount(doubleDrops ? amount * 2 : amount);
-
-                    if (preset.isDropNaturally()) {
-                        drops.add(item);
-                    } else {
-                        giveItem(item, player);
-                    }
+                    drops.put(item, preset.isDropNaturally());
                 }
 
-                if (expToDrop.get() > 0) {
-                    giveExp(block.getLocation(), player, doubleExp ? expToDrop.get() * 2 : expToDrop.get(),
-                            preset.isDropNaturally());
-                }
+                experience += vanillaExperience.get();
             } else {
                 for (ItemDrop drop : preset.getRewards().getDrops()) {
                     ItemStack itemStack = drop.toItemStack(player);
@@ -307,43 +281,29 @@ public class BlockListener implements Listener {
                                 + itemStack.getAmount());
                     }
 
-                    if (doubleDrops) {
-                        itemStack.setAmount(itemStack.getAmount() * 2);
-                    }
-
-                    // Drop/Give the item.
-
-                    if (drop.isDropNaturally()) {
-                        drops.add(itemStack);
-                    } else {
-                        giveItem(itemStack, player);
-                    }
-
-                    if (drop.getExperienceDrop() == null) {
-                        continue;
-                    }
+                    drops.put(itemStack, drop.isDropNaturally());
 
                     ExperienceDrop experienceDrop = drop.getExperienceDrop();
-
-                    AtomicInteger expAmount = new AtomicInteger(experienceDrop.getAmount().getInt());
-
-                    if (expAmount.get() <= 0) {
-                        continue;
+                    if (experienceDrop != null) {
+                        experience += experienceDrop.getAmount().getInt();
                     }
-
-                    if (doubleExp) {
-                        expAmount.set(expAmount.get() * 2);
-                    }
-
-                    // Drop/Give the exp.
-
-                    giveExp(block.getLocation(), player, expAmount.get(), experienceDrop.isDropNaturally());
                 }
             }
 
+            PresetEvent presetEvent = plugin.getEventManager().getEvent(preset.getName());
+
+            // Event
             if (presetEvent != null && presetEvent.isEnabled()) {
 
-                // Fire rewards
+                // Double drops and exp
+                if (presetEvent.isDoubleDrops()) {
+                    drops.keySet().forEach(drop -> drop.setAmount(drop.getAmount() * 2));
+                }
+                if (presetEvent.isDoubleExperience()) {
+                    experience *= 2;
+                }
+
+                // Item reward
                 if (plugin.getRandom().nextInt(presetEvent.getItemRarity().getInt()) == 0) {
                     ItemDrop eventDrop = presetEvent.getItem();
 
@@ -352,11 +312,7 @@ public class BlockListener implements Listener {
                         ItemStack eventStack = eventDrop.toItemStack(player);
 
                         if (eventStack != null) {
-                            if (preset.isDropNaturally()) {
-                                drops.add(eventStack);
-                            } else {
-                                giveItem(eventStack, player);
-                            }
+                            drops.put(eventStack, eventDrop.isDropNaturally());
                         }
                     }
 
@@ -365,11 +321,7 @@ public class BlockListener implements Listener {
                         ItemStack item = drop.toItemStack(player);
 
                         if (item != null) {
-                            if (preset.isDropNaturally()) {
-                                drops.add(item);
-                            } else {
-                                giveItem(item, player);
-                            }
+                            drops.put(item, drop.isDropNaturally());
                         }
                     }
 
@@ -377,35 +329,34 @@ public class BlockListener implements Listener {
                 }
             }
 
-            // Drop all the items
-            dropItems(drops, state, player);
+            // Drop/give all the items & experience at once
+            giveItems(drops, state, player);
+            giveExp(block.getLocation(), player, experience, preset.isDropNaturally());
 
             // Trigger Jobs Break if enabled
-            // -----------------------------------------------------------------------
-            if (plugin.getConfig().getBoolean("Jobs-Rewards", false) && plugin.getJobsProvider() != null)
+            if (plugin.getConfig().getBoolean("Jobs-Rewards", false) && plugin.getJobsProvider() != null) {
                 Bukkit.getScheduler().runTask(plugin,
                         () -> plugin.getJobsProvider().triggerBlockBreakAction(player, block));
+            }
 
-            // Rewards
-            // ---------------------------------------------------------------------------------------------
+            // Other rewards - commands, money etc.
             preset.getRewards().give(player);
 
-            // Block Break Sound
-            // ---------------------------------------------------------------------------------------------
-            if (preset.getSound() != null)
+            if (preset.getSound() != null) {
                 preset.getSound().play(block.getLocation());
+            }
 
-            // Particles
-            // -------------------------------------------------------------------------------------------
-            if (preset.getParticle() != null && plugin.getVersionManager().isCurrentAbove("1.8", false))
+            if (preset.getParticle() != null && plugin.getVersionManager().isCurrentAbove("1.8", false)) {
                 Bukkit.getScheduler().runTask(plugin,
                         () -> plugin.getParticleManager().displayParticle(preset.getParticle(), block));
+            }
         });
     }
 
     private void spawnExp(Location location, int amount) {
-        if (location.getWorld() == null)
+        if (location.getWorld() == null) {
             return;
+        }
 
         Bukkit.getScheduler().runTask(plugin,
                 () -> location.getWorld().spawn(location, ExperienceOrb.class).setExperience(amount));
@@ -413,20 +364,27 @@ public class BlockListener implements Listener {
     }
 
     private void giveExp(Location location, Player player, int amount, boolean naturally) {
-        if (naturally)
+        if (naturally) {
             spawnExp(location, amount);
-        else
+        } else {
             player.giveExp(amount);
+        }
     }
 
-    private void dropItems(Collection<ItemStack> itemStacks, BlockState blockState, Player player) {
+    private void giveItems(Map<ItemStack, Boolean> itemStacks, BlockState blockState, Player player) {
         Bukkit.getScheduler().runTask(plugin, () -> {
             List<Item> items = new ArrayList<>();
 
-            for (ItemStack itemStack : itemStacks) {
-                items.add(blockState.getWorld().dropItemNaturally(blockState.getLocation(), itemStack));
+            for (Map.Entry<ItemStack, Boolean> entry : itemStacks.entrySet()) {
+                ItemStack item = entry.getKey();
 
-                log.fine("Dropping item " + itemStack.getType() + "x" + itemStack.getAmount());
+                if (entry.getValue()) {
+                    items.add(blockState.getWorld().dropItemNaturally(blockState.getLocation(), item));
+                    log.fine("Dropping item " + item.getType() + "x" + item.getAmount());
+                } else {
+                    player.getInventory().addItem(item);
+                    log.fine("Giving item " + item.getType() + "x" + item.getAmount());
+                }
             }
 
             BlockDropItemEvent event = new BlockDropItemEvent(blockState.getBlock(), blockState, player, new ArrayList<>(items));
@@ -442,10 +400,5 @@ public class BlockListener implements Listener {
                 items.forEach(Entity::remove);
             }
         });
-    }
-
-    private void giveItem(ItemStack item, Player player) {
-        Bukkit.getScheduler().runTask(plugin, () -> player.getInventory().addItem(item));
-        log.fine("Giving item " + item.getType() + "x" + item.getAmount());
     }
 }

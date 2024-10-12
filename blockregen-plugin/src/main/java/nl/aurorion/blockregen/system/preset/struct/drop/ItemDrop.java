@@ -45,7 +45,7 @@ public class ItemDrop {
     private Set<ItemFlag> itemFlags = new HashSet<>();
 
     @Setter
-    private boolean dropNaturally = true;
+    private boolean dropNaturally = false;
 
     @Setter
     private ExperienceDrop experienceDrop;
