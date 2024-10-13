@@ -4,12 +4,16 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.java.Log;
+import nl.aurorion.blockregen.StringUtil;
 import nl.aurorion.blockregen.version.api.NodeData;
 import org.bukkit.Axis;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.*;
 import org.bukkit.block.data.type.Stairs;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Log
 @ToString
@@ -25,9 +29,7 @@ public class LatestNodeData implements NodeData {
 
     private BlockFace rotation;
 
-    private int age = -1;
-
-    private boolean farmland;
+    private Integer age;
 
     public void copyBlockData(BlockData data) {
         if (data instanceof Directional) {
@@ -57,31 +59,31 @@ public class LatestNodeData implements NodeData {
 
         log.fine(String.format("Checking against data %s", this));
 
-        if (data instanceof Directional directional) {
+        if (data instanceof Directional directional && this.facing != null) {
             if (directional.getFacing() != this.facing)  {
                 return false;
             }
         }
 
-        if (data instanceof Stairs stairs) {
+        if (data instanceof Stairs stairs && this.stairShape != null) {
             if (stairs.getShape() != this.stairShape) {
                 return false;
             }
         }
 
-        if (data instanceof Orientable orientable) {
+        if (data instanceof Orientable orientable && this.axis != null) {
             if (orientable.getAxis() != this.axis) {
                 return false;
             }
         }
 
-        if (data instanceof Rotatable rotatable) {
+        if (data instanceof Rotatable rotatable && this.rotation != null) {
             if (rotatable.getRotation() != this.rotation) {
                 return false;
             }
         }
 
-        if (data instanceof Ageable ageable) {
+        if (data instanceof Ageable ageable && this.age != null) {
             if (ageable.getAge() != this.age) {
                 return false;
             }
@@ -119,10 +121,26 @@ public class LatestNodeData implements NodeData {
             ((Rotatable) blockData).setRotation(this.rotation);
         }
 
-        if (blockData instanceof Ageable && this.age != -1) {
+        if (blockData instanceof Ageable && this.age != null) {
             ((Ageable) blockData).setAge(this.age);
         }
 
         block.setBlockData(blockData);
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return this.facing == null && this.stairShape == null && this.axis == null && this.rotation == null && this.age != null;
+    }
+
+    @Override
+    public String getPrettyString() {
+        Map<String, Object> entries = new HashMap<>();
+        entries.put("facing", this.facing);
+        entries.put("shape", this.stairShape);
+        entries.put("axis", this.axis);
+        entries.put("rotation", this.rotation);
+        entries.put("age", this.age);
+        return StringUtil.serializeNodeDataEntries(entries);
     }
 }

@@ -5,6 +5,8 @@ import org.bukkit.ChatColor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Map;
+
 @UtilityClass
 public class StringUtil {
     public String stripColor(String msg) {
@@ -28,5 +30,17 @@ public class StringUtil {
     @NotNull
     public String color(@Nullable String msg, char colorChar) {
         return msg == null ? "" : ChatColor.translateAlternateColorCodes(colorChar, msg);
+    }
+
+    public String serializeNodeDataEntries(Map<String, Object> entries) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("[");
+        for (Map.Entry<String, Object> entry : entries.entrySet()) {
+            if (entry.getValue() == null) continue;
+            builder.append(String.format("%s=%s,", entry.getKey(), entry.getValue()));
+        }
+        builder.deleteCharAt(builder.length() - 1);
+        builder.append("]");
+        return builder.toString();
     }
 }

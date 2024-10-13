@@ -52,6 +52,7 @@ public enum Message {
      * Data check
      */
     DATA_CHECK("Data-Check", "&eThe correct name to enter in the config is: &d%block%"),
+    DATA_CHECK_NODE_DATA("Data-Check-Node-Data", "&eWith exact block data: &d%data%"),
     DATA_CHECK_ON("Data-Check-On", "&aEntered Data-Check mode!"),
     DATA_CHECK_OFF("Data-Check-Off", "&cLeft Data-Check mode!"),
 

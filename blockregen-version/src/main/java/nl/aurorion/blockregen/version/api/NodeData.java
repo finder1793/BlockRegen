@@ -15,4 +15,8 @@ public interface NodeData {
 
     // Check NodeData against a placed block.
     boolean check(Block block);
+
+    boolean isEmpty();
+
+    String getPrettyString();
 }

@@ -4,6 +4,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.java.Log;
+import nl.aurorion.blockregen.StringUtil;
 import nl.aurorion.blockregen.version.api.NodeData;
 import org.bukkit.CropState;
 import org.bukkit.TreeSpecies;
@@ -11,6 +12,9 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.material.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Log
 @ToString
@@ -109,7 +113,7 @@ public class LegacyNodeData implements NodeData {
             wood.setSpecies(this.treeSpecies);
         }
 
-        if (data instanceof Stairs && this.inverted) {
+        if (data instanceof Stairs && this.inverted != null && this.inverted) {
             ((Stairs) data).setInverted(true);
         }
 
@@ -119,5 +123,20 @@ public class LegacyNodeData implements NodeData {
 
         state.setData(data);
         state.update(true);
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return this.facing == null && this.treeSpecies == null && this.inverted != null && this.cropState == null;
+    }
+
+    @Override
+    public String getPrettyString() {
+        Map<String, Object> entries = new HashMap<>();
+        entries.put("facing", this.facing);
+        entries.put("species", this.treeSpecies);
+        entries.put("inverted", this.inverted);
+        entries.put("age", this.cropState == null ? null : this.cropState.ordinal());
+        return StringUtil.serializeNodeDataEntries(entries);
     }
 }
