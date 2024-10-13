@@ -19,6 +19,7 @@ import nl.aurorion.blockregen.system.regeneration.struct.RegenerationProcess;
 import nl.aurorion.blockregen.system.region.struct.RegenerationRegion;
 import nl.aurorion.blockregen.util.ItemUtil;
 import nl.aurorion.blockregen.util.LocationUtil;
+import nl.aurorion.blockregen.util.TextUtil;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -32,6 +33,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 @Log
 public class BlockListener implements Listener {
@@ -278,6 +280,8 @@ public class BlockListener implements Listener {
         // Start regeneration
         process.start();
 
+        Function<String, String> parser = (str) -> TextUtil.parse(str, player, block);
+
         // Run rewards async
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             Map<ItemStack, Boolean> drops = new HashMap<>();
@@ -301,7 +305,7 @@ public class BlockListener implements Listener {
                 experience += vanillaExperience.get();
             } else {
                 for (ItemDrop drop : preset.getRewards().getDrops()) {
-                    ItemStack itemStack = drop.toItemStack(player);
+                    ItemStack itemStack = drop.toItemStack(player, parser);
                     if (itemStack == null) {
                         continue;
                     }
@@ -340,7 +344,7 @@ public class BlockListener implements Listener {
 
                     // Event item
                     if (eventDrop != null) {
-                        ItemStack eventStack = eventDrop.toItemStack(player);
+                        ItemStack eventStack = eventDrop.toItemStack(player, parser);
 
                         if (eventStack != null) {
                             drops.put(eventStack, eventDrop.isDropNaturally());
@@ -349,14 +353,14 @@ public class BlockListener implements Listener {
 
                     // Add items from presetEvent
                     for (ItemDrop drop : presetEvent.getRewards().getDrops()) {
-                        ItemStack item = drop.toItemStack(player);
+                        ItemStack item = drop.toItemStack(player, parser);
 
                         if (item != null) {
                             drops.put(item, drop.isDropNaturally());
                         }
                     }
 
-                    presetEvent.getRewards().give(player);
+                    presetEvent.getRewards().give(player, parser);
                 }
             }
 
@@ -371,7 +375,7 @@ public class BlockListener implements Listener {
             }
 
             // Other rewards - commands, money etc.
-            preset.getRewards().give(player);
+            preset.getRewards().give(player, (str) -> TextUtil.parse(str, player, block));
 
             if (preset.getSound() != null) {
                 preset.getSound().play(block.getLocation());

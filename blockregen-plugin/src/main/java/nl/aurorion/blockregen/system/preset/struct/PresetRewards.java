@@ -8,7 +8,6 @@ import lombok.extern.java.Log;
 import nl.aurorion.blockregen.BlockRegen;
 import nl.aurorion.blockregen.system.preset.struct.drop.ItemDrop;
 import nl.aurorion.blockregen.util.ParseUtil;
-import nl.aurorion.blockregen.util.TextUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -18,6 +17,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 @Log
 @NoArgsConstructor
@@ -94,18 +94,19 @@ public class PresetRewards {
         return new ArrayList<>();
     }
 
-    public void give(Player player) {
+    public void give(Player player, Function<String, String> parser) {
 
         if (BlockRegen.getInstance().getEconomy() != null) {
             double money = this.money.getDouble();
-            if (money > 0)
+            if (money > 0) {
                 BlockRegen.getInstance().getEconomy().depositPlayer(player, money);
+            }
         }
 
         // Sync commands
         Bukkit.getScheduler().runTask(BlockRegen.getInstance(), () -> {
-            playerCommands.stream().filter(Command::shouldExecute).forEach(command -> Bukkit.dispatchCommand(player, TextUtil.parse(command.getCommand(), player)));
-            consoleCommands.stream().filter(Command::shouldExecute).forEach(command -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), TextUtil.parse(command.getCommand(), player)));
+            playerCommands.stream().filter(Command::shouldExecute).forEach(command -> Bukkit.dispatchCommand(player, parser.apply(command.getCommand())));
+            consoleCommands.stream().filter(Command::shouldExecute).forEach(command -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), parser.apply(command.getCommand())));
         });
     }
 

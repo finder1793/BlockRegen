@@ -10,6 +10,7 @@ import nl.aurorion.blockregen.system.preset.struct.Amount;
 import nl.aurorion.blockregen.system.preset.struct.BlockPreset;
 import nl.aurorion.blockregen.util.ParseUtil;
 import nl.aurorion.blockregen.util.TextUtil;
+import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
@@ -17,10 +18,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Getter
@@ -60,8 +59,15 @@ public class ItemDrop {
         this.material = material;
     }
 
+
+    /**
+     * Compose this Drop into an item stack.
+     *
+     * @param player Player to give the rewards to.
+     * @return Created item stack.
+     */
     @Nullable
-    public ItemStack toItemStack(Player player) {
+    public ItemStack toItemStack(Player player, Function<String, String> parser) {
 
         // x/100% chance to drop
         if (chance != null) {
@@ -76,26 +82,32 @@ public class ItemDrop {
 
         int amount = this.amount.getInt();
 
-        if (amount <= 0) return null;
+        if (amount <= 0) {
+            return null;
+        }
 
         ItemStack itemStack = material.parseItem();
 
-        if (itemStack == null)
+        if (itemStack == null) {
             return null;
+        }
 
         itemStack.setAmount(amount);
 
         ItemMeta itemMeta = itemStack.getItemMeta();
 
-        if (itemMeta == null) return null;
+        if (itemMeta == null) {
+            return null;
+        }
 
-        if (displayName != null)
-            itemMeta.setDisplayName(StringUtil.color(TextUtil.parse(displayName, player)));
+        if (displayName != null) {
+            itemMeta.setDisplayName(StringUtil.color(parser.apply(displayName)));
+        }
 
         if (lore != null) {
             List<String> lore = new ArrayList<>(this.lore);
 
-            lore.replaceAll(o -> StringUtil.color(TextUtil.parse(o, player)));
+            lore.replaceAll(o -> StringUtil.color(parser.apply(o)));
 
             itemMeta.setLore(lore);
         }

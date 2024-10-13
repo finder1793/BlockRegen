@@ -5,6 +5,7 @@ import lombok.experimental.UtilityClass;
 import me.clip.placeholderapi.PlaceholderAPI;
 import nl.aurorion.blockregen.BlockRegen;
 import nl.aurorion.blockregen.Message;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
 import java.util.Arrays;
@@ -13,25 +14,33 @@ import java.util.stream.Collectors;
 @UtilityClass
 public class TextUtil {
 
-    public String parse(String string) {
-
-        if (Strings.isNullOrEmpty(string))
+    // Parse placeholders with different objects as context.
+    public String parse(String string, Object... context) {
+        if (Strings.isNullOrEmpty(string)) {
             return string;
+        }
 
         string = string.replaceAll("(?i)%prefix%", Message.PREFIX.getValue());
+
+        for (Object o : context) {
+            if (o instanceof Player player) {
+                string = string.replaceAll("(?i)%player%", player.getName());
+                if (BlockRegen.getInstance().isUsePlaceholderAPI()) {
+                    string = PlaceholderAPI.setPlaceholders((Player) o, string);
+                }
+            } else if (o instanceof Block block) {
+                string = string.replaceAll("(?i)%block_x%", String.valueOf(block.getLocation().getBlockX()));
+                string = string.replaceAll("(?i)%block_y%", String.valueOf(block.getLocation().getBlockY()));
+                string = string.replaceAll("(?i)%block_z%", String.valueOf(block.getLocation().getBlockZ()));
+                string = string.replaceAll("(?i)%block_world%", block.getWorld().getName());
+            }
+        }
+
         return string;
     }
 
-    public String parse(String string, Player player) {
-        string = parse(string);
-
-        if (Strings.isNullOrEmpty(string)) return string;
-
-        string = string.replaceAll("(?i)%player%", player.getName());
-        if (BlockRegen.getInstance().isUsePlaceholderAPI())
-            string = PlaceholderAPI.setPlaceholders(player, string);
-
-        return string;
+    public String parse(String string) {
+        return parse(string, new Object[]{});
     }
 
     public String capitalizeWord(String str) {
