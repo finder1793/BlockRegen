@@ -42,12 +42,6 @@ public class BlockListener implements Listener {
         this.plugin = plugin;
     }
 
-    private boolean hasBypass(Player player) {
-        return plugin.getRegenerationManager().hasBypass(player)
-                || (plugin.getConfig().getBoolean("Bypass-In-Creative", false)
-                && player.getGameMode() == GameMode.CREATIVE);
-    }
-
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onBreak(BlockBreakEvent event) {
 
@@ -132,6 +126,14 @@ public class BlockListener implements Listener {
             return;
         }
 
+        // Check region permissions
+        if (isInRegion && lacksPermission(player, "blockregen.region", region.getName()) && !player.isOp()) {
+            event.setCancelled(true);
+            Message.PERMISSION_REGION_ERROR.send(event.getPlayer());
+            log.fine(String.format("Player doesn't have permissions for region %s", region.getName()));
+            return;
+        }
+
         RegenerationProcess process = plugin.getRegenerationManager().createProcess(block, preset, isInRegion ? region.getName() : null);
         process(process, preset, event);
     }
@@ -193,20 +195,49 @@ public class BlockListener implements Listener {
         return false;
     }
 
+    /*
+     We do this our own way, because default permissions don't seem to work well with LuckPerms.
+     (having a wildcard permission with default: true doesn't seem to work)
+
+     When neither of the permissions are defined allow everything.
+     Specific permission takes precedence over wildcards.
+    */
+    private boolean lacksPermission(Player player, String permission, String specific) {
+        boolean hasAll = player.hasPermission(String.format("%s.*", permission));
+        boolean allDefined = player.isPermissionSet(String.format("%s.*", permission));
+
+        boolean hasSpecific = player.hasPermission(String.format("%s.%s", permission, specific));
+        boolean specificDefined = player.isPermissionSet(String.format("%s.%s", permission, specific));
+
+        return !((hasAll && !specificDefined) || (!allDefined && !specificDefined) || (hasSpecific && specificDefined));
+    }
+
+    private boolean hasBypass(Player player) {
+        return plugin.getRegenerationManager().hasBypass(player)
+                || (plugin.getConfig().getBoolean("Bypass-In-Creative", false)
+                && player.getGameMode() == GameMode.CREATIVE);
+    }
+
     private void process(RegenerationProcess process, BlockPreset preset, BlockBreakEvent event) {
         Player player = event.getPlayer();
 
         Block block = event.getBlock();
         BlockState state = block.getState();
-        String blockName = block.getType().name();
 
-        // Check permissions
-        if (!player.hasPermission("blockregen.block." + blockName) &&
-                !player.hasPermission("blockregen.block.*") &&
-                !player.isOp()) {
+        // Check block permissions
+        // Mostly kept out of backwards compatibility with peoples settings and expectancies over how this works.
+        if (lacksPermission(player, "blockregen.block", block.getType().toString()) && !player.isOp()) {
             Message.PERMISSION_BLOCK_ERROR.send(event.getPlayer());
             event.setCancelled(true);
-            log.fine("Player doesn't have permissions.");
+            log.fine(String.format("Player doesn't have permission for block %s.", block.getType()));
+            return;
+        }
+
+        // Check preset permissions
+        if (lacksPermission(player, "blockregen.preset", preset.getName()) && !player.isOp()) {
+            Message.PERMISSION_BLOCK_ERROR.send(event.getPlayer());
+            event.setCancelled(true);
+            log.fine(String.format("Player doesn't have permission for preset %s.", preset.getName()));
             return;
         }
 

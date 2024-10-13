@@ -12,6 +12,7 @@ import org.bukkit.entity.Player;
  *
  * @author Wertik1206
  */
+// TODO: Recode without an enum.
 public enum Message {
 
     PREFIX("Prefix", "&6[&3BlockRegen&6] &r"),
@@ -92,7 +93,8 @@ public enum Message {
     TOOL_REQUIRED_ERROR("Tool-Required-Error", "&cYou can only break this block with the following tool(s): &b%tool%&c."),
     ENCHANT_REQUIRED_ERROR("Enchant-Required-Error", "&cYour tool has to have at least one of the following enchantment(s): &b%enchant%&c."),
     JOBS_REQUIRED_ERROR("Jobs-Error", "&cYou need to reach following job levels in order to break this block: &b%job%"),
-    PERMISSION_BLOCK_ERROR("Permission-Error", "&cYou don't have the permission to break this block.");
+    PERMISSION_BLOCK_ERROR("Permission-Error", "&cYou don't have the permission to break this block."),
+    PERMISSION_REGION_ERROR("Permission-Region-Error", "&cYou don't have the permission to break in this region.");
 
     @Getter
     private final String path;
@@ -103,6 +105,11 @@ public enum Message {
 
     @Getter
     private static boolean insertPrefix = false;
+
+    Message(String path, String value) {
+        this.path = path;
+        this.value = value;
+    }
 
     public String get() {
         return StringUtil.color(TextUtil.parse(insertPrefix ? "%prefix%" + this.value : this.value));
@@ -120,13 +127,7 @@ public enum Message {
         player.sendMessage(get(player));
     }
 
-    Message(String path, String value) {
-        this.path = path;
-        this.value = value;
-    }
-
     public static void load() {
-
         FileConfiguration messages = BlockRegen.getInstance().getFiles().getMessages().getFileConfiguration();
 
         if (!messages.contains("Insert-Prefix"))

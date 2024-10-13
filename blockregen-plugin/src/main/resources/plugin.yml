@@ -39,6 +39,12 @@ permissions:
   blockregen.events:
     description: Allows access to event commands.
 
+  blockregen.region.*:
+    default: true
+    description: Allows player to mine in all regions.
+  blockregen.preset.*:
+    default: true
+    description: Allows player to mine all presets.
   blockregen.block.*:
     default: true
-    description: Gives player the ability to mine ores.
+    description: Allows player to mine all blocks.
