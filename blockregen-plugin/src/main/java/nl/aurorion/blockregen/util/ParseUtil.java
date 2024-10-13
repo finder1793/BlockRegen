@@ -65,7 +65,12 @@ public class ParseUtil {
     }
 
     @Nullable
-    public XMaterial parseMaterial(String input, boolean... blocksOnly) {
+    public XMaterial parseMaterial(String input) {
+        return parseMaterial(input, false);
+    }
+
+    @Nullable
+    public XMaterial parseMaterial(String input, boolean blocksOnly) {
 
         if (Strings.isNullOrEmpty(input)) {
             return null;
@@ -80,7 +85,7 @@ public class ParseUtil {
 
         Material material = xMaterial.get().parseMaterial();
 
-        if (material != null && blocksOnly.length > 0 && blocksOnly[0] && !material.isBlock()) {
+        if (material != null && blocksOnly && !material.isBlock()) {
             log.fine("Material " + input + " is not a block.");
             return null;
         }

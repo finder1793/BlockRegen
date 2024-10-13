@@ -7,18 +7,10 @@ import lombok.extern.java.Log;
 import nl.aurorion.blockregen.BlockRegen;
 import nl.aurorion.blockregen.util.ParseUtil;
 import nl.aurorion.blockregen.version.ancient.AncientMethods;
-import nl.aurorion.blockregen.version.api.Methods;
-import nl.aurorion.blockregen.version.api.NodeData;
-import nl.aurorion.blockregen.version.api.WorldEditProvider;
-import nl.aurorion.blockregen.version.api.WorldGuardProvider;
-import nl.aurorion.blockregen.version.current.LatestMethods;
-import nl.aurorion.blockregen.version.current.LatestNodeData;
-import nl.aurorion.blockregen.version.current.LatestWorldEditProvider;
-import nl.aurorion.blockregen.version.current.LatestWorldGuardProvider;
-import nl.aurorion.blockregen.version.legacy.LegacyMethods;
-import nl.aurorion.blockregen.version.legacy.LegacyNodeData;
-import nl.aurorion.blockregen.version.legacy.LegacyWorldEditProvider;
-import nl.aurorion.blockregen.version.legacy.LegacyWorldGuardProvider;
+import nl.aurorion.blockregen.version.ancient.AncientNodeDataParser;
+import nl.aurorion.blockregen.version.api.*;
+import nl.aurorion.blockregen.version.current.*;
+import nl.aurorion.blockregen.version.legacy.*;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 
@@ -42,6 +34,9 @@ public class VersionManager {
 
     @Getter
     private NodeDataProvider nodeProvider;
+
+    @Getter
+    private NodeDataParser nodeDataParser;
 
     // 1.14+
     private boolean customModelData = false;
@@ -70,6 +65,7 @@ public class VersionManager {
                     useWorldGuard(new LegacyWorldGuardProvider(this.worldGuard));
                 this.methods = new AncientMethods();
                 this.nodeProvider = LegacyNodeData::new;
+                this.nodeDataParser = new AncientNodeDataParser();
                 break;
             case "1.9":
             case "1.10":
@@ -81,6 +77,7 @@ public class VersionManager {
                     useWorldGuard(new LegacyWorldGuardProvider(this.worldGuard));
                 this.methods = new LegacyMethods();
                 this.nodeProvider = LegacyNodeData::new;
+                this.nodeDataParser = new LegacyNodeDataParser();
                 break;
             case "1.13":
                 break;
@@ -97,6 +94,7 @@ public class VersionManager {
                     useWorldGuard(new LatestWorldGuardProvider(this.worldGuard));
                 this.methods = new LatestMethods();
                 this.nodeProvider = LatestNodeData::new;
+                this.nodeDataParser = new LatestNodeDataParser();
                 this.customModelData = true;
                 break;
         }

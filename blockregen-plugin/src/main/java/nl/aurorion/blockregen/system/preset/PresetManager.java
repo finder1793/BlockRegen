@@ -104,7 +104,7 @@ public class PresetManager {
             }
             preset.setTargetMaterial(targetMaterial);
         } catch (IllegalArgumentException e) {
-            log.warning(String.format("Could not load preset %s, invalid target material %s.", name, targetMaterialInput));
+            log.warning(String.format("Could not load preset %s: %s", name, e.getMessage()));
             return;
         }
         log.fine(String.format("target-material: %s", preset.getTargetMaterial()));

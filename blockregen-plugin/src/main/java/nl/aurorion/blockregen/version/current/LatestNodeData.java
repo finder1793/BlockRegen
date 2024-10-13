@@ -1,20 +1,20 @@
 package nl.aurorion.blockregen.version.current;
 
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.java.Log;
 import nl.aurorion.blockregen.version.api.NodeData;
 import org.bukkit.Axis;
-import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.*;
-import org.bukkit.block.data.type.Farmland;
 import org.bukkit.block.data.type.Stairs;
 
 @Log
 @ToString
 @NoArgsConstructor
+@Setter
 public class LatestNodeData implements NodeData {
 
     private BlockFace facing;
@@ -29,12 +29,7 @@ public class LatestNodeData implements NodeData {
 
     private boolean farmland;
 
-    @Override
-    public void load(Block block) {
-        BlockData data = block.getBlockData();
-
-        log.fine(data.toString());
-
+    public void copyBlockData(BlockData data) {
         if (data instanceof Directional) {
             this.facing = ((Directional) data).getFacing();
         }
@@ -54,13 +49,52 @@ public class LatestNodeData implements NodeData {
         if (data instanceof Ageable) {
             this.age = ((Ageable) data).getAge();
         }
+    }
 
-        // Check for farmland under this block
-        BlockData underData = block.getRelative(BlockFace.DOWN).getBlockData();
+    @Override
+    public boolean check(Block block) {
+        BlockData data = block.getBlockData();
 
-        if (underData instanceof Farmland) {
-            this.farmland = true;
+        log.fine(String.format("Checking against data %s", this));
+
+        if (data instanceof Directional directional) {
+            if (directional.getFacing() != this.facing)  {
+                return false;
+            }
         }
+
+        if (data instanceof Stairs stairs) {
+            if (stairs.getShape() != this.stairShape) {
+                return false;
+            }
+        }
+
+        if (data instanceof Orientable orientable) {
+            if (orientable.getAxis() != this.axis) {
+                return false;
+            }
+        }
+
+        if (data instanceof Rotatable rotatable) {
+            if (rotatable.getRotation() != this.rotation) {
+                return false;
+            }
+        }
+
+        if (data instanceof Ageable ageable) {
+            if (ageable.getAge() != this.age) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    @Override
+    public void load(Block block) {
+        BlockData data = block.getBlockData();
+
+        this.copyBlockData(data);
 
         log.fine(String.format("Loaded block data %s (%s)", block.getType(), this));
     }
@@ -87,10 +121,6 @@ public class LatestNodeData implements NodeData {
 
         if (blockData instanceof Ageable && this.age != -1) {
             ((Ageable) blockData).setAge(this.age);
-        }
-
-        if (farmland) {
-            block.getRelative(BlockFace.DOWN).setType(Material.FARMLAND);
         }
 
         block.setBlockData(blockData);

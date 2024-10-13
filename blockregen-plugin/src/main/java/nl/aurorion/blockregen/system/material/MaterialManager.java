@@ -43,7 +43,7 @@ public class MaterialManager {
     /**
      * Parse a material using registered parsers.
      *
-     * @param input Input string, format (prefix:?)(material-name)
+     * @param input Input string, format (prefix:?)(material-name[nodedata,...])
      * @return Parsed material or null when no parser was found.
      * @throws IllegalArgumentException When the parser is unable to parse the material.
      */

@@ -1,61 +1,92 @@
 package nl.aurorion.blockregen.version.legacy;
 
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.java.Log;
 import nl.aurorion.blockregen.version.api.NodeData;
-import org.bukkit.Material;
+import org.bukkit.CropState;
+import org.bukkit.TreeSpecies;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
-import org.bukkit.entity.Ageable;
-import org.bukkit.material.Directional;
-import org.bukkit.material.MaterialData;
-import org.bukkit.material.Stairs;
-import org.bukkit.material.Tree;
+import org.bukkit.material.*;
 
 @Log
 @ToString
+@Setter
 @NoArgsConstructor
 public class LegacyNodeData implements NodeData {
 
     private BlockFace facing;
 
-    private BlockFace treeFacing;
+    // Trees
+    private TreeSpecies treeSpecies;
 
     // Stairs
+    private Boolean inverted;
 
-    private boolean inverted;
+    private CropState cropState;
 
-    private int age = -1;
+    @Override
+    public boolean check(Block block) {
+        MaterialData data = block.getState().getData();
 
-    private boolean farmland;
+        if (data instanceof Directional directional && this.facing != null) {
+            if (directional.getFacing() != this.facing) {
+                return false;
+            }
+        }
+
+        if (data instanceof Tree tree && this.facing != null) {
+            if (tree.getDirection() != this.facing) {
+                return false;
+            }
+        }
+
+        if (data instanceof Wood wood && this.treeSpecies != null) {
+            if (wood.getSpecies() != this.treeSpecies) {
+                return false;
+            }
+        }
+
+        if (data instanceof Stairs stairs && this.inverted != null) {
+            if (stairs.isInverted() != this.inverted) {
+                return false;
+            }
+        }
+
+        if (data instanceof Crops crops && this.cropState != null) {
+            if (crops.getState() != this.cropState) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     @Override
     public void load(Block block) {
         MaterialData data = block.getState().getData();
 
-        if (data instanceof Directional) {
-            this.facing = ((Directional) data).getFacing();
+        if (data instanceof Directional directional) {
+            this.facing = directional.getFacing();
         }
 
-        if (data instanceof Tree) {
-            this.treeFacing = ((Tree) data).getDirection();
+        if (data instanceof Tree tree) {
+            this.facing = tree.getDirection();
         }
 
-        if (data instanceof Stairs) {
-            this.inverted = ((Stairs) data).isInverted();
+        if (data instanceof Stairs stairs) {
+            this.inverted = stairs.isInverted();
         }
 
-        if (data instanceof Ageable) {
-            this.age = ((Ageable) data).getAge();
+        if (data instanceof Crops crops) {
+            this.cropState = crops.getState();
         }
 
-        // Check for farmland under this block
-        Block underBlock = block.getRelative(BlockFace.DOWN);
-
-        if (underBlock.getType() == Material.SOIL) {
-            this.farmland = true;
+        if (data instanceof Wood wood) {
+            this.treeSpecies = wood.getSpecies();
         }
 
         log.fine(String.format("Loaded block data %s (%s)", block.getType(), this));
@@ -66,28 +97,27 @@ public class LegacyNodeData implements NodeData {
         BlockState state = block.getState();
         MaterialData data = state.getData();
 
-        if (data instanceof Directional && this.facing != null) {
-            ((Directional) data).setFacingDirection(this.facing);
+        if (data instanceof Directional directional && this.facing != null) {
+            directional.setFacingDirection(this.facing);
         }
 
-        if (data instanceof Tree && this.treeFacing != null) {
-            ((Tree) data).setDirection(this.treeFacing);
+        if (data instanceof Tree tree && this.facing != null) {
+            tree.setDirection(this.facing);
+        }
+
+        if (data instanceof Wood wood && this.treeSpecies != null) {
+            wood.setSpecies(this.treeSpecies);
         }
 
         if (data instanceof Stairs && this.inverted) {
             ((Stairs) data).setInverted(true);
         }
 
-        if (data instanceof Ageable && this.age != -1) {
-            ((Ageable) data).setAge(this.age);
-        }
-
-        if (farmland) {
-            block.getRelative(BlockFace.DOWN).setType(Material.SOIL);
+        if (data instanceof Crops crops && this.cropState != null) {
+            crops.setState(cropState);
         }
 
         state.setData(data);
         state.update(true);
     }
-
 }

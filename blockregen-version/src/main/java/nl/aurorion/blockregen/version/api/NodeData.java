@@ -7,9 +7,12 @@ import org.bukkit.block.Block;
     Any implementation has to be easily serializable into Json.
 */
 public interface NodeData {
-    /* Load the blocks block data. */
+    // Load the blocks block data.
     void load(Block block);
 
-    /* Place the block with corresponding Block data. */
+    // Place the block with corresponding Block data.
     void place(Block block);
+
+    // Check NodeData against a placed block.
+    boolean check(Block block);
 }

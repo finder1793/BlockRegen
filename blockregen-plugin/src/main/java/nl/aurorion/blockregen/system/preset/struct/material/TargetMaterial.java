@@ -14,4 +14,8 @@ public interface TargetMaterial {
      * Change the block to this material.
      */
     void place(Block block);
+
+    default void applyData(Block block) {
+        //
+    }
 }

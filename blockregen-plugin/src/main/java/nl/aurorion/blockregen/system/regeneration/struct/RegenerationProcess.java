@@ -127,7 +127,8 @@ public class RegenerationProcess implements Runnable {
         if (getReplaceMaterial() != null) {
             Bukkit.getScheduler().runTask(plugin, () -> {
                 this.getReplaceMaterial().place(block);
-                this.originalData.place(block); // Apply data
+                this.originalData.place(block); // Apply original data
+                getReplaceMaterial().applyData(block); // Apply configured data if any
                 log.fine("Replaced block for " + this);
             });
         }
@@ -192,7 +193,8 @@ public class RegenerationProcess implements Runnable {
 
         Bukkit.getScheduler().runTask(plugin, () -> {
             regenerateInto.place(block);
-            this.originalData.place(block); // Apply data
+            originalData.place(block); // Apply original data
+            regenerateInto.applyData(block); // Override with configured data if any
             log.fine("Regenerated " + this);
         });
     }
