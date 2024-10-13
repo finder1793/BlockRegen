@@ -24,7 +24,7 @@ public class LegacyNodeDataParser implements NodeDataParser {
             return null;
         }
 
-        String dataString = matcher.group();
+        String dataString = matcher.group(1);
 
         LegacyNodeData nodeData = new LegacyNodeData();
 

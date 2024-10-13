@@ -8,6 +8,7 @@ import nl.aurorion.blockregen.StringUtil;
 import nl.aurorion.blockregen.version.api.Methods;
 import org.bukkit.Bukkit;
 import org.bukkit.DyeColor;
+import org.bukkit.Material;
 import org.bukkit.TreeSpecies;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -75,6 +76,13 @@ public class LegacyMethods implements Methods {
 
     @Override
     public void setType(@NotNull Block block, @NotNull XMaterial xMaterial) {
+        // Quick and dirty fix for XMaterial being wrong.
+        if (xMaterial == XMaterial.WHEAT) {
+            block.setType(Material.CROPS);
+            block.getState().setData(new MaterialData(xMaterial.parseMaterial(), xMaterial.getData()));
+            return;
+        }
+
         XBlock.setType(block, xMaterial);
     }
 
