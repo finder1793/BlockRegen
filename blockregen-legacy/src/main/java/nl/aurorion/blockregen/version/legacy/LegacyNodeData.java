@@ -127,7 +127,7 @@ public class LegacyNodeData implements NodeData {
 
     @Override
     public boolean isEmpty() {
-        return this.facing == null && this.treeSpecies == null && this.inverted != null && this.cropState == null;
+        return this.facing == null && this.treeSpecies == null && this.inverted == null && this.cropState == null;
     }
 
     @Override

@@ -32,24 +32,24 @@ public class LatestNodeData implements NodeData {
     private Integer age;
 
     public void copyBlockData(BlockData data) {
-        if (data instanceof Directional) {
-            this.facing = ((Directional) data).getFacing();
+        if (data instanceof Directional directional) {
+            this.facing = directional.getFacing();
         }
 
-        if (data instanceof Stairs) {
-            this.stairShape = ((Stairs) data).getShape();
+        if (data instanceof Stairs stairs) {
+            this.stairShape = stairs.getShape();
         }
 
-        if (data instanceof Orientable) {
-            this.axis = ((Orientable) data).getAxis();
+        if (data instanceof Orientable orientable) {
+            this.axis = orientable.getAxis();
         }
 
-        if (data instanceof Rotatable) {
-            this.rotation = ((Rotatable) data).getRotation();
+        if (data instanceof Rotatable rotatable) {
+            this.rotation = rotatable.getRotation();
         }
 
-        if (data instanceof Ageable) {
-            this.age = ((Ageable) data).getAge();
+        if (data instanceof Ageable ageable) {
+            this.age = ageable.getAge();
         }
     }
 
@@ -130,7 +130,7 @@ public class LatestNodeData implements NodeData {
 
     @Override
     public boolean isEmpty() {
-        return this.facing == null && this.stairShape == null && this.axis == null && this.rotation == null && this.age != null;
+        return this.facing == null && this.stairShape == null && this.axis == null && this.rotation == null && this.age == null;
     }
 
     @Override
