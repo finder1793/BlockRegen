@@ -41,6 +41,7 @@ public class Commands implements CommandExecutor {
             + "\n&3/%label% region add <region> <preset> &8- &7Add a preset to the region."
             + "\n&3/%label% region remove <region> <preset> &8- &7Remove a preset from region."
             + "\n&3/%label% region clear <region> &8- &7Clear all presets from the region."
+            + "\n&3/%label% region priority <region> <priority> &8- &7Set the priority of the region."
             + "\n&3/%label% region copy <region-from> <region-to> &8- &7Copy configured presets from one region to another."
             + "\n&3/%label% region delete <region> &8- &7Delete a region."
             + "\n&3/%label% regen (-p <preset>) (-r <region>) (-w <world>) &8- &7Regenerate presets based on argument switches."
