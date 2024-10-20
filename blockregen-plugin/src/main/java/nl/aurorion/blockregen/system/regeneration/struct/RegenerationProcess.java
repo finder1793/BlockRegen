@@ -129,6 +129,9 @@ public class RegenerationProcess implements Runnable {
                 this.getReplaceMaterial().place(block);
                 this.originalData.place(block); // Apply original data
                 getReplaceMaterial().applyData(block); // Apply configured data if any
+
+                // Otherwise skull textures wouldn't update.
+                Bukkit.getScheduler().runTaskLater(plugin, () -> block.getState().update(true), 1L);
                 log.fine("Replaced block for " + this);
             });
         }

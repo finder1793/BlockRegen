@@ -49,7 +49,7 @@ public class MaterialManager {
      */
     public @Nullable TargetMaterial parseMaterial(@NotNull String input) throws IllegalArgumentException {
         // Separate parts
-        String[] parts = input.split(":");
+        String[] parts = input.split("[\\w+\\]]:\\w");
 
         // First either prefix or material
 

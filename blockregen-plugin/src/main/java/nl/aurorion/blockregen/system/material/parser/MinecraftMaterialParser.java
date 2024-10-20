@@ -37,7 +37,7 @@ public class MinecraftMaterialParser implements MaterialParser {
         }
 
         if (loadData) {
-            NodeData nodeData = plugin.getVersionManager().getNodeDataParser().parse(String.format("minecraft:%s", input.toLowerCase()));
+            NodeData nodeData = plugin.getVersionManager().getNodeDataParser().parse(String.format("minecraft:%s", input));
             return new MinecraftMaterial(plugin, xMaterial, nodeData);
         } else {
             return new MinecraftMaterial(plugin, xMaterial);

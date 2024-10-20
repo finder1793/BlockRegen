@@ -1,5 +1,8 @@
 package nl.aurorion.blockregen.version.legacy;
 
+import com.cryptomorin.xseries.profiles.builder.XSkull;
+import com.cryptomorin.xseries.profiles.exceptions.InvalidProfileContainerException;
+import com.cryptomorin.xseries.profiles.objects.Profileable;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
@@ -32,9 +35,24 @@ public class LegacyNodeData implements NodeData {
 
     private CropState cropState;
 
+    private String skull;
+
     @Override
     public boolean check(Block block) {
         MaterialData data = block.getState().getData();
+
+        if (this.skull != null) {
+            try {
+                String profileString = XSkull.of(block).getProfileString();
+
+                if (profileString != null && !profileString.equals(this.skull)) {
+                    return false;
+                }
+            } catch (InvalidProfileContainerException e) {
+                // not a skull
+                return false;
+            }
+        }
 
         if (data instanceof Directional directional && this.facing != null) {
             if (directional.getFacing() != this.facing) {
@@ -72,6 +90,12 @@ public class LegacyNodeData implements NodeData {
     @Override
     public void load(Block block) {
         MaterialData data = block.getState().getData();
+
+        try {
+            this.skull = XSkull.of(block).getProfileString();
+        } catch (InvalidProfileContainerException e) {
+            // not a skull
+        }
 
         if (data instanceof Directional directional) {
             this.facing = directional.getFacing();
@@ -121,8 +145,13 @@ public class LegacyNodeData implements NodeData {
             crops.setState(cropState);
         }
 
+        if (this.skull != null) {
+            XSkull.of(block)
+                    .profile(Profileable.detect(this.skull))
+                    .apply();
+        }
+
         state.setData(data);
-        state.update(true);
     }
 
     @Override

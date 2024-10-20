@@ -1,5 +1,8 @@
 package nl.aurorion.blockregen.version.current;
 
+import com.cryptomorin.xseries.profiles.builder.XSkull;
+import com.cryptomorin.xseries.profiles.exceptions.InvalidProfileContainerException;
+import com.cryptomorin.xseries.profiles.objects.Profileable;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
@@ -31,27 +34,7 @@ public class LatestNodeData implements NodeData {
 
     private Integer age;
 
-    public void copyBlockData(BlockData data) {
-        if (data instanceof Directional directional) {
-            this.facing = directional.getFacing();
-        }
-
-        if (data instanceof Stairs stairs) {
-            this.stairShape = stairs.getShape();
-        }
-
-        if (data instanceof Orientable orientable) {
-            this.axis = orientable.getAxis();
-        }
-
-        if (data instanceof Rotatable rotatable) {
-            this.rotation = rotatable.getRotation();
-        }
-
-        if (data instanceof Ageable ageable) {
-            this.age = ageable.getAge();
-        }
-    }
+    private String skull;
 
     @Override
     public boolean check(Block block) {
@@ -59,8 +42,21 @@ public class LatestNodeData implements NodeData {
 
         log.fine(String.format("Checking against data %s", this));
 
+        if (this.skull != null) {
+            try {
+                String profileString = XSkull.of(block).getProfileString();
+
+                if (profileString != null && !profileString.equals(this.skull)) {
+                    return false;
+                }
+            } catch (InvalidProfileContainerException e) {
+                // not a skull
+                return false;
+            }
+        }
+
         if (data instanceof Directional directional && this.facing != null) {
-            if (directional.getFacing() != this.facing)  {
+            if (directional.getFacing() != this.facing) {
                 return false;
             }
         }
@@ -96,7 +92,31 @@ public class LatestNodeData implements NodeData {
     public void load(Block block) {
         BlockData data = block.getBlockData();
 
-        this.copyBlockData(data);
+        try {
+            this.skull = XSkull.of(block).getProfileString();
+        } catch (InvalidProfileContainerException e) {
+            // not a skull
+        }
+
+        if (data instanceof Directional directional) {
+            this.facing = directional.getFacing();
+        }
+
+        if (data instanceof Stairs stairs) {
+            this.stairShape = stairs.getShape();
+        }
+
+        if (data instanceof Orientable orientable) {
+            this.axis = orientable.getAxis();
+        }
+
+        if (data instanceof Rotatable rotatable) {
+            this.rotation = rotatable.getRotation();
+        }
+
+        if (data instanceof Ageable ageable) {
+            this.age = ageable.getAge();
+        }
 
         log.fine(String.format("Loaded block data %s (%s)", block.getType(), this));
     }
@@ -126,6 +146,12 @@ public class LatestNodeData implements NodeData {
         }
 
         block.setBlockData(blockData);
+
+        if (this.skull != null) {
+            XSkull.of(block)
+                    .profile(Profileable.detect(this.skull))
+                    .apply();
+        }
     }
 
     @Override
@@ -141,6 +167,7 @@ public class LatestNodeData implements NodeData {
         entries.put("axis", this.axis);
         entries.put("rotation", this.rotation);
         entries.put("age", this.age);
+        entries.put("skull", this.skull);
         return StringUtil.serializeNodeDataEntries(entries);
     }
 }
