@@ -13,7 +13,6 @@ import nl.aurorion.blockregen.system.region.struct.RegenerationRegion;
 import nl.aurorion.blockregen.system.region.struct.RegenerationWorld;
 import nl.aurorion.blockregen.system.region.struct.RegionSelection;
 import nl.aurorion.blockregen.util.LocationUtil;
-import nl.aurorion.blockregen.util.ParseUtil;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -22,9 +21,11 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 public class Commands implements CommandExecutor {
 
