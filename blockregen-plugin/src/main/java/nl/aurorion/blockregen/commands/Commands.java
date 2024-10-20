@@ -8,8 +8,12 @@ import nl.aurorion.blockregen.StringUtil;
 import nl.aurorion.blockregen.system.event.struct.PresetEvent;
 import nl.aurorion.blockregen.system.preset.struct.BlockPreset;
 import nl.aurorion.blockregen.system.regeneration.struct.RegenerationProcess;
+import nl.aurorion.blockregen.system.region.struct.RegenerationArea;
 import nl.aurorion.blockregen.system.region.struct.RegenerationRegion;
+import nl.aurorion.blockregen.system.region.struct.RegenerationWorld;
 import nl.aurorion.blockregen.system.region.struct.RegionSelection;
+import nl.aurorion.blockregen.util.LocationUtil;
+import nl.aurorion.blockregen.util.ParseUtil;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -18,10 +22,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -35,6 +36,7 @@ public class Commands implements CommandExecutor {
             + "\n&3/%label% tools &8- &7Gives you tools for regions."
             + "\n&3/%label% regions &8- &7List regions."
             + "\n&3/%label% region set <region> &8- &7Create a region from your selection."
+            + "\n&3/%label% region world <region> <worldName> &8- &7Create a region for the world."
             + "\n&3/%label% region all <region> &8- &7Switch 'all presets' mode."
             + "\n&3/%label% region add <region> <preset> &8- &7Add a preset to the region."
             + "\n&3/%label% region remove <region> <preset> &8- &7Remove a preset from region."
@@ -123,27 +125,7 @@ public class Commands implements CommandExecutor {
                     return false;
                 }
 
-                ItemStack shovel = XMaterial.WOODEN_SHOVEL.parseItem();
-
-                ItemMeta meta = shovel.getItemMeta();
-                meta.setDisplayName(StringUtil.color("&3BlockRegen preset tool"));
-                meta.setLore(Lists.newArrayList(StringUtil.color(
-                        "&fLeft click &7on a block in a region to add the blocks preset.",
-                        "&fRight click &7on a block in a region to remove the blocks preset.")));
-                shovel.setItemMeta(meta);
-
-                ItemStack axe = XMaterial.WOODEN_AXE.parseItem();
-
-                meta = axe.getItemMeta();
-                meta.setDisplayName(StringUtil.color("&3BlockRegen selection tool"));
-                meta.setLore(Lists.newArrayList(StringUtil.color("&fLeft click &7to select first position.",
-                        "&fRight click &7to select second position.",
-                        "&f/blockregen region set <name> &7to create a region from selection.")));
-                axe.setItemMeta(meta);
-
-                player.getInventory().addItem(shovel, axe);
-
-                Message.TOOLS.send(player);
+                giveTools(player);
                 break;
             }
             case "regions": {
@@ -165,22 +147,7 @@ public class Commands implements CommandExecutor {
                     return false;
                 }
 
-                StringBuilder message = new StringBuilder("&8&m    &3 BlockRegen Regions &8&m    &r\n");
-                for (RegenerationRegion region : plugin.getRegionManager().getLoadedRegions().values()) {
-
-                    message.append(String.format("&8  - &f%s", region.getName()));
-
-                    if (region.isAll()) {
-                        message.append("&8 (&aall&8)\n");
-                    } else {
-                        if (!region.getPresets().isEmpty()) {
-                            message.append(String.format("&8 (&r%s&8)\n", region.getPresets()));
-                        } else {
-                            message.append("&8 (&cnone&8)\n");
-                        }
-                    }
-                }
-                sender.sendMessage(StringUtil.color(message.toString()));
+                listRegions(sender);
                 break;
             }
             case "region": {
@@ -208,23 +175,74 @@ public class Commands implements CommandExecutor {
                             return false;
                         }
 
-                        StringBuilder message = new StringBuilder("&8&m    &3 BlockRegen Regions &8&m    &r\n");
-                        for (RegenerationRegion region : plugin.getRegionManager().getLoadedRegions().values()) {
+                        listRegions(sender);
+                        return false;
+                    }
+                    case "world": {
+                        if (args.length > 4) {
+                            sender.sendMessage(Message.TOO_MANY_ARGS.get(player)
+                                    .replace("%help%", String.format("/%s region world <name> <worldName>", label)));
+                            return false;
+                        } else if (args.length < 4) {
+                            sender.sendMessage(Message.NOT_ENOUGH_ARGS.get(player)
+                                    .replace("%help%", String.format("/%s region world <name> <worldName>", label)));
+                            return false;
+                        }
 
-                            message.append(String.format("&8  - &f%s", region.getName()));
+                        if (plugin.getRegionManager().exists(args[2])) {
+                            Message.DUPLICATED_REGION.send(player);
+                            return false;
+                        }
 
-                            if (region.isAll()) {
-                                message.append("&8 (&aall&8)\n");
-                            } else {
-                                if (!region.getPresets().isEmpty()) {
-                                    message.append(String.format("&8 (&r%s&8)\n", region.getPresets()));
-                                } else {
-                                    message.append("&8 (&cnone&8)\n");
+                        for (RegenerationArea area : this.plugin.getRegionManager().getLoadedAreas()) {
+                            if (area instanceof RegenerationWorld world) {
+                                if (world.getWorldName().equals(args[3])) {
+                                    Message.DUPLICATED_WORLD_REGION.send(player);
+                                    return false;
                                 }
                             }
                         }
-                        sender.sendMessage(StringUtil.color(message.toString()));
-                        return false;
+
+                        RegenerationArea area = plugin.getRegionManager().createWorld(args[2], args[3]);
+                        plugin.getRegionManager().addArea(area);
+                        player.sendMessage(StringUtil.color(Message.REGION_FROM_WORLD.get(player)
+                                .replace("%region%", args[2])
+                                .replace("%world%", args[3])));
+                        break;
+                    }
+                    case "priority": {
+                        if (args.length > 4) {
+                            sender.sendMessage(Message.TOO_MANY_ARGS.get(player)
+                                    .replace("%help%", String.format("/%s region priority <name> <priority>", label)));
+                            return false;
+                        } else if (args.length < 4) {
+                            sender.sendMessage(Message.NOT_ENOUGH_ARGS.get(player)
+                                    .replace("%help%", String.format("/%s region priority <name> <priority>", label)));
+                            return false;
+                        }
+
+                        if (!plugin.getRegionManager().exists(args[2])) {
+                            Message.UNKNOWN_REGION.send(player);
+                            return false;
+                        }
+
+                        int priority;
+                        try {
+                            priority = Integer.parseInt(args[3]);
+                        } catch (NumberFormatException e) {
+                            player.sendMessage(Message.ARGUMENT_NOT_A_NUMBER.get(player)
+                                    .replace("%arg%", "priority")
+                                    .replace("%value%", args[3]));
+                            break;
+                        }
+
+                        RegenerationArea area = plugin.getRegionManager().getArea(args[2]);
+                        area.setPriority(priority);
+                        plugin.getRegionManager().sort();
+                        player.sendMessage(StringUtil.color(Message.REGION_PRIORITY_CHANGED.get(player)
+                                .replace("%region%", args[2])
+                                .replace("%priority%", args[3])));
+                        break;
                     }
                     case "set": {
                         if (args.length > 3) {
@@ -280,7 +298,7 @@ public class Commands implements CommandExecutor {
                             return false;
                         }
 
-                        plugin.getRegionManager().removeRegion(args[2]);
+                        plugin.getRegionManager().removeArea(args[2]);
                         Message.REMOVE_REGION.send(player);
                         return false;
                     }
@@ -295,14 +313,14 @@ public class Commands implements CommandExecutor {
                             return false;
                         }
 
-                        RegenerationRegion region = plugin.getRegionManager().getRegion(args[2]);
+                        RegenerationArea region = plugin.getRegionManager().getArea(args[2]);
 
                         if (region == null) {
                             Message.UNKNOWN_REGION.send(player);
                             return false;
                         }
 
-                        player.sendMessage(StringUtil.color(String.format(Message.SET_ALL.get(player), region.setAll(!region.isAll()) ? "&aall" : "&cnot all")));
+                        player.sendMessage(StringUtil.color(String.format(Message.SET_ALL.get(player), region.switchAll() ? "&aall" : "&cnot all")));
                         return false;
                     }
                     case "add": {
@@ -316,7 +334,7 @@ public class Commands implements CommandExecutor {
                             return false;
                         }
 
-                        RegenerationRegion region = plugin.getRegionManager().getRegion(args[2]);
+                        RegenerationArea region = plugin.getRegionManager().getArea(args[2]);
 
                         if (region == null) {
                             Message.UNKNOWN_REGION.send(player);
@@ -355,7 +373,7 @@ public class Commands implements CommandExecutor {
                             return false;
                         }
 
-                        RegenerationRegion region = plugin.getRegionManager().getRegion(args[2]);
+                        RegenerationArea region = plugin.getRegionManager().getArea(args[2]);
 
                         if (region == null) {
                             Message.UNKNOWN_REGION.send(player);
@@ -394,7 +412,7 @@ public class Commands implements CommandExecutor {
                             return false;
                         }
 
-                        RegenerationRegion region = plugin.getRegionManager().getRegion(args[2]);
+                        RegenerationArea region = plugin.getRegionManager().getArea(args[2]);
 
                         if (region == null) {
                             Message.UNKNOWN_REGION.send(player);
@@ -417,14 +435,14 @@ public class Commands implements CommandExecutor {
                             return false;
                         }
 
-                        RegenerationRegion regionFrom = plugin.getRegionManager().getRegion(args[2]);
+                        RegenerationArea regionFrom = plugin.getRegionManager().getArea(args[2]);
 
                         if (regionFrom == null) {
                             Message.UNKNOWN_REGION.send(player);
                             return false;
                         }
 
-                        RegenerationRegion regionTo = plugin.getRegionManager().getRegion(args[3]);
+                        RegenerationArea regionTo = plugin.getRegionManager().getArea(args[3]);
 
                         if (regionTo == null) {
                             Message.UNKNOWN_REGION.send(player);
@@ -456,7 +474,7 @@ public class Commands implements CommandExecutor {
 
                 BlockPreset preset = null;
                 String worldName = null;
-                RegenerationRegion region = null;
+                RegenerationArea region = null;
 
                 Iterator<String> it = Arrays.stream(workArgs).iterator();
 
@@ -466,7 +484,7 @@ public class Commands implements CommandExecutor {
                     if (arg.equalsIgnoreCase("-p") && it.hasNext()) {
                         preset = plugin.getPresetManager().getPreset(it.next());
                     } else if (arg.equalsIgnoreCase("-r") && it.hasNext()) {
-                        region = plugin.getRegionManager().getRegion(it.next());
+                        region = plugin.getRegionManager().getArea(it.next());
                     } else if (arg.equalsIgnoreCase("-w") && it.hasNext()) {
                         worldName = it.next();
                     } else {
@@ -528,8 +546,13 @@ public class Commands implements CommandExecutor {
                     return false;
                 }
 
-                sender.sendMessage(StringUtil.color("&8&m      &3 BlockRegen Discord Server" +
-                        "\n&6>> &7https://discord.gg/ZCxMca5"));
+                sender.sendMessage(StringUtil.color("""
+                                &8&m        &r &3BlockRegen &f%version% &8&m        &r
+                                &7If you need help, either read through the wiki page or reach out on discord!&r
+                                
+                                &3Discord &7https://discord.gg/ZCxMca5&r
+                                &6Wiki &7https://github.com/Wertik/BlockRegen/wiki&r""")
+                        .replaceAll("(?i)%version%", plugin.getDescription().getVersion()));
                 break;
             case "events":
                 if (!sender.hasPermission("blockregen.events")) {
@@ -607,6 +630,57 @@ public class Commands implements CommandExecutor {
             }
         }
         return false;
+    }
+
+    private void giveTools(@NotNull Player player) {
+        ItemStack shovel = XMaterial.WOODEN_SHOVEL.parseItem();
+
+        ItemMeta meta = shovel.getItemMeta();
+        meta.setDisplayName(StringUtil.color("&3BlockRegen preset tool"));
+        meta.setLore(Lists.newArrayList(StringUtil.color(
+                "&fLeft click &7on a block in a region to add the blocks preset.",
+                "&fRight click &7on a block in a region to remove the blocks preset.")));
+        shovel.setItemMeta(meta);
+
+        ItemStack axe = XMaterial.WOODEN_AXE.parseItem();
+
+        meta = axe.getItemMeta();
+        meta.setDisplayName(StringUtil.color("&3BlockRegen selection tool"));
+        meta.setLore(Lists.newArrayList(StringUtil.color("&fLeft click &7to select first position.",
+                "&fRight click &7to select second position.",
+                "&f/blockregen region set <name> &7to create a region from selection.")));
+        axe.setItemMeta(meta);
+
+        player.getInventory().addItem(shovel, axe);
+
+        Message.TOOLS.send(player);
+    }
+
+    private void listRegions(CommandSender sender) {
+        StringBuilder message = new StringBuilder("&8&m    &3 BlockRegen Regions &8&m    &r\n");
+        for (RegenerationArea area : plugin.getRegionManager().getLoadedAreas()) {
+
+            message.append(String.format(" &f%s\n", area.getName()));
+
+            if (area instanceof RegenerationRegion region) {
+                message.append(String.format("  &7Area: &f%s &8- &f%s", LocationUtil.locationToString(region.getMin()), LocationUtil.locationToString(region.getMax()))).append('\n');
+            } else if (area instanceof RegenerationWorld world) {
+                message.append("  &7World: &f").append(world.getWorldName()).append('\n');
+            }
+
+            message.append(String.format("  &7Priority: &f%d\n", area.getPriority()));
+
+            if (area.isAll()) {
+                message.append("  &7Presets: &aall\n");
+            } else {
+                if (!area.getPresets().isEmpty()) {
+                    message.append("  &7Presets: ").append(String.format("&f%s\n", area.getPresets()));
+                } else {
+                    message.append("  &7Presets: &cnone\n");
+                }
+            }
+        }
+        sender.sendMessage(StringUtil.color(message.toString()));
     }
 
     private boolean checkConsole(CommandSender sender) {

@@ -30,6 +30,7 @@ public enum Message {
 
     TOO_MANY_ARGS("Too-Many-Arguments", "&cToo many arguments.\n&7Use: &f%help%"),
     NOT_ENOUGH_ARGS("Not-Enough-Arguments", "&cNot enough arguments.\n&7Use: &f%help%"),
+    ARGUMENT_NOT_A_NUMBER("Argument-Not-A-Number", "&cArgument %arg% has to be a number. &7(provided: %value%)."),
 
     RELOAD("Reload", "&aSuccessfully reloaded Settings.yml, Messages.yml, Blocklist.yml & re-filled the events!"),
 
@@ -62,7 +63,10 @@ public enum Message {
      */
     NO_SELECTION("No-Region-Selected", "&cSelect a region with WorldEdit first."),
     DUPLICATED_REGION("Duplicated-Region", "&cThere is already a region with that name!"),
+    DUPLICATED_WORLD_REGION("Duplicated-World-Region", "&cThere is already a region for this world!"),
     SET_REGION("Set-Region", "&7Region &f%region% &7successfully saved!"),
+    REGION_FROM_WORLD("Set-World-Region", "&7Region &f%region% &7created for world &3%world%&7!"),
+    REGION_PRIORITY_CHANGED("Region-Priority-Changed", "&7Changed priority for region &f%region% &7to &f%priority%."),
     REMOVE_REGION("Remove-Region", "&aRegion successfully deleted!"),
     UNKNOWN_REGION("Unknown-Region", "&cThere is no region with that name!"),
     COULD_NOT_CREATE_REGION("Could-Not-Create-Region", "&cCould not created a region."),

@@ -23,15 +23,19 @@ public class RawRegion {
     private final boolean all;
 
     @Getter
+    private final int priority;
+
+    @Getter
     @Setter
     private boolean reattempt = false;
 
-    public RawRegion(String name, String min, String max, List<String> blockPresets, boolean all) {
+    public RawRegion(String name, String min, String max, List<String> blockPresets, boolean all, int priority) {
         this.name = name;
         this.min = min;
         this.max = max;
         this.blockPresets = blockPresets;
         this.all = all;
+        this.priority = priority;
     }
 
     public RegenerationRegion build() {
@@ -42,6 +46,8 @@ public class RawRegion {
             return null;
         }
 
-        return new RegenerationRegion(name, min, max);
+        RegenerationRegion region = new RegenerationRegion(name, min, max);
+        region.setPriority(priority);
+        return region;
     }
 }

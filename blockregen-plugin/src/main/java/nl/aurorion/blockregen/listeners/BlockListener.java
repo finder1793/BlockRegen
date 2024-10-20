@@ -16,21 +16,26 @@ import nl.aurorion.blockregen.system.preset.struct.BlockPreset;
 import nl.aurorion.blockregen.system.preset.struct.drop.ExperienceDrop;
 import nl.aurorion.blockregen.system.preset.struct.drop.ItemDrop;
 import nl.aurorion.blockregen.system.regeneration.struct.RegenerationProcess;
-import nl.aurorion.blockregen.system.region.struct.RegenerationRegion;
+import nl.aurorion.blockregen.system.region.struct.RegenerationArea;
 import nl.aurorion.blockregen.util.ItemUtil;
 import nl.aurorion.blockregen.util.LocationUtil;
 import nl.aurorion.blockregen.util.TextUtil;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
-import org.bukkit.entity.*;
+import org.bukkit.entity.ExperienceOrb;
+import org.bukkit.entity.Item;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
@@ -95,7 +100,7 @@ public class BlockListener implements Listener {
         World world = block.getWorld();
 
         boolean useRegions = plugin.getConfig().getBoolean("Use-Regions", false);
-        RegenerationRegion region = plugin.getRegionManager().getRegion(block.getLocation());
+        RegenerationArea region = plugin.getRegionManager().getArea(block);
 
         boolean isInWorld = plugin.getConfig().getStringList("Worlds-Enabled").contains(world.getName());
         boolean isInRegion = region != null;

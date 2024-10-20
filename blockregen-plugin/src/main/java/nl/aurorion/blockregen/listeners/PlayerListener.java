@@ -5,7 +5,7 @@ import nl.aurorion.blockregen.BlockRegen;
 import nl.aurorion.blockregen.Message;
 import nl.aurorion.blockregen.system.preset.struct.BlockPreset;
 import nl.aurorion.blockregen.system.regeneration.struct.RegenerationProcess;
-import nl.aurorion.blockregen.system.region.struct.RegenerationRegion;
+import nl.aurorion.blockregen.system.region.struct.RegenerationArea;
 import nl.aurorion.blockregen.system.region.struct.RegionSelection;
 import nl.aurorion.blockregen.version.api.NodeData;
 import org.bukkit.entity.Player;
@@ -72,7 +72,7 @@ public class PlayerListener implements Listener {
 
         // Adding presets to regions,... with a shovel?
 
-        RegenerationRegion region = plugin.getRegionManager().getRegion(event.getClickedBlock().getLocation());
+        RegenerationArea region = plugin.getRegionManager().getArea(event.getClickedBlock());
 
         if (player.hasPermission("blockregen.region") && handMaterial == XMaterial.WOODEN_SHOVEL && region != null) {
             event.setCancelled(true);
