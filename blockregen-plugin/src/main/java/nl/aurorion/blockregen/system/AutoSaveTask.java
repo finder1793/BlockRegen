@@ -27,8 +27,9 @@ public class AutoSaveTask implements Runnable {
     }
 
     public void start() {
-        if (running)
+        if (running) {
             stop();
+        }
 
         running = true;
         task = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this, period * 20L, period * 20L);
@@ -36,8 +37,9 @@ public class AutoSaveTask implements Runnable {
     }
 
     public void stop() {
-        if (!running)
+        if (!running) {
             return;
+        }
 
         if (task == null) {
             running = false;

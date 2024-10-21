@@ -22,7 +22,7 @@ import java.util.UUID;
 @Log
 @Data
 // TODO: Move all the logic into the manager. Use this only as a data structure.
-public class RegenerationProcess implements Runnable {
+public class RegenerationProcess {
 
     private final UUID id = UUID.randomUUID();
 
@@ -78,23 +78,8 @@ public class RegenerationProcess implements Runnable {
         this.replaceMaterial = preset.getReplaceMaterial().get();
     }
 
-    public TargetMaterial getRegenerateInto() {
-        // Make sure we always get something.
-        if (regenerateInto == null) {
-            this.regenerateInto = preset.getRegenMaterial().get();
-        }
-        return regenerateInto;
-    }
-
-    public TargetMaterial getReplaceMaterial() {
-        // Make sure we always get something.
-        if (replaceMaterial == null) {
-            this.replaceMaterial = preset.getReplaceMaterial().get();
-        }
-        return replaceMaterial;
-    }
-
     // Return true if the process started, false otherwise.
+    // Can be called async.
     public boolean start() {
 
         // Ensure to stop and null anything that ran before.
@@ -122,33 +107,25 @@ public class RegenerationProcess implements Runnable {
             return false;
         }
 
-        // Replace the block
-
-        if (getReplaceMaterial() != null) {
-            Bukkit.getScheduler().runTask(plugin, () -> {
-                this.getReplaceMaterial().place(block);
-                this.originalData.place(block); // Apply original data
-                getReplaceMaterial().applyData(block); // Apply configured data if any
-
-                // Otherwise skull textures wouldn't update.
-                Bukkit.getScheduler().runTaskLater(plugin, () -> block.getState().update(true), 1L);
-                log.fine("Replaced block for " + this);
-            });
-        }
+        Bukkit.getScheduler().runTask(plugin, this::replaceBlock);
 
         // Start the task
-        this.task = Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, this, timeLeft / 50);
+        this.task = Bukkit.getScheduler().runTaskLater(plugin, this::regenerate, timeLeft / 50);
         log.fine(String.format("Regenerate %s in %ds", this, timeLeft / 1000));
         return true;
     }
 
-    @Override
-    public void run() {
-        regenerate();
+    public void stop() {
+        if (task != null) {
+            task.cancel();
+            this.task = null;
+        }
     }
 
     /**
-     * Regenerate the block.
+     * Regenerate the process and block.
+     * <p>
+     * Calls BlockRegenBlockRegenerationEvent.
      */
     public void regenerate() {
 
@@ -161,7 +138,7 @@ public class RegenerationProcess implements Runnable {
 
         // Call the event
         BlockRegenBlockRegenerationEvent blockRegenBlockRegenEvent = new BlockRegenBlockRegenerationEvent(this);
-        Bukkit.getScheduler().runTask(plugin, () -> Bukkit.getPluginManager().callEvent(blockRegenBlockRegenEvent));
+        Bukkit.getPluginManager().callEvent(blockRegenBlockRegenEvent);
 
         plugin.getRegenerationManager().removeProcess(this);
 
@@ -171,10 +148,11 @@ public class RegenerationProcess implements Runnable {
 
         regenerateBlock();
 
-        // Particle
-        if (preset.getRegenerationParticle() != null) {
-            plugin.getParticleManager().displayParticle(preset.getRegenerationParticle(), block);
-        }
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            if (preset.getRegenerationParticle() != null) {
+                plugin.getParticleManager().displayParticle(preset.getRegenerationParticle(), block);
+            }
+        });
 
         // Null the task
         this.task = null;
@@ -185,8 +163,6 @@ public class RegenerationProcess implements Runnable {
      * context.
      */
     public void regenerateBlock() {
-        BlockRegen plugin = BlockRegen.getInstance();
-
         // Set type
         TargetMaterial regenerateInto = getRegenerateInto();
         if (regenerateInto == null) {
@@ -194,12 +170,10 @@ public class RegenerationProcess implements Runnable {
             return;
         }
 
-        Bukkit.getScheduler().runTask(plugin, () -> {
-            regenerateInto.place(block);
-            originalData.place(block); // Apply original data
-            regenerateInto.applyData(block); // Override with configured data if any
-            log.fine("Regenerated " + this);
-        });
+        regenerateInto.place(block);
+        originalData.place(block); // Apply original data
+        regenerateInto.applyData(block); // Override with configured data if any
+        log.fine("Regenerated " + this);
     }
 
     // Revert process to original material.
@@ -207,17 +181,9 @@ public class RegenerationProcess implements Runnable {
         stop();
 
         BlockRegen plugin = BlockRegen.getInstance();
-
         plugin.getRegenerationManager().removeProcess(this);
 
         revertBlock();
-    }
-
-    public void stop() {
-        if (task != null) {
-            task.cancel();
-            this.task = null;
-        }
     }
 
     // Revert block to original state
@@ -225,12 +191,40 @@ public class RegenerationProcess implements Runnable {
         Material material = originalMaterial.parseMaterial();
 
         if (material != null) {
-            Bukkit.getScheduler().runTask(BlockRegen.getInstance(), () -> {
-                block.setType(material);
-                originalData.place(this.block);
-                log.fine(String.format("Reverted block for %s", this));
-            });
+            block.setType(material);
+            originalData.place(this.block);
+            log.fine(String.format("Reverted block for %s", this));
         }
+    }
+
+    public void replaceBlock() {
+        if (getReplaceMaterial() == null) {
+            return;
+        }
+
+        this.getReplaceMaterial().place(block);
+        this.originalData.place(block); // Apply original data
+        getReplaceMaterial().applyData(block); // Apply configured data if any
+
+        // Otherwise skull textures wouldn't update.
+        Bukkit.getScheduler().runTaskLater(BlockRegen.getInstance(), () -> block.getState().update(true), 1L);
+        log.fine("Replaced block for " + this);
+    }
+
+    public TargetMaterial getRegenerateInto() {
+        // Make sure we always get something.
+        if (regenerateInto == null) {
+            this.regenerateInto = preset.getRegenMaterial().get();
+        }
+        return regenerateInto;
+    }
+
+    public TargetMaterial getReplaceMaterial() {
+        // Make sure we always get something.
+        if (replaceMaterial == null) {
+            this.replaceMaterial = preset.getReplaceMaterial().get();
+        }
+        return replaceMaterial;
     }
 
     // Convert stored Location pointer to the Block at the location.
@@ -260,7 +254,6 @@ public class RegenerationProcess implements Runnable {
 
         if (preset == null) {
             log.severe("Could not load process " + this + ", it's preset '" + presetName + "' is invalid.");
-            revert();
             return false;
         }
 
@@ -270,10 +263,11 @@ public class RegenerationProcess implements Runnable {
 
     public void updateTimeLeft(long timeLeft) {
         this.timeLeft = timeLeft;
-        if (timeLeft > 0)
+        if (timeLeft > 0) {
             start();
-        else
-            run();
+        } else {
+            regenerate();
+        }
     }
 
     public boolean isRunning() {

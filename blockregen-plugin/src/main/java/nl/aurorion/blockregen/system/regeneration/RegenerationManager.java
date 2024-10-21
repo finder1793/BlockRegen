@@ -7,6 +7,7 @@ import nl.aurorion.blockregen.system.AutoSaveTask;
 import nl.aurorion.blockregen.system.preset.struct.BlockPreset;
 import nl.aurorion.blockregen.system.regeneration.struct.RegenerationProcess;
 import nl.aurorion.blockregen.version.api.NodeData;
+import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -124,7 +125,6 @@ public class RegenerationManager {
 
     public boolean isRegenerating(@NotNull Block block) {
         RegenerationProcess process = getProcess(block);
-
         return process != null && process.getRegenerationTime() > System.currentTimeMillis();
     }
 
@@ -162,11 +162,16 @@ public class RegenerationManager {
         cache.forEach(RegenerationProcess::revertBlock);
     }
 
+    // Can only be called from the main thread
     private void purgeExpired() {
         // Clear invalid processes
         for (RegenerationProcess process : new HashSet<>(cache)) {
             if (process.getTimeLeft() < 0) {
-                process.regenerateBlock();
+                if (Bukkit.isPrimaryThread()) {
+                    process.regenerateBlock();
+                } else {
+                    Bukkit.getScheduler().runTask(plugin, process::regenerateBlock);
+                }
             }
         }
     }
@@ -218,7 +223,7 @@ public class RegenerationManager {
                         }
 
                         if (!process.convertPreset()) {
-                            process.revert();
+                            Bukkit.getScheduler().runTask(plugin, process::revert);
                             continue;
                         }
                         log.fine("Prepared regeneration process " + process);

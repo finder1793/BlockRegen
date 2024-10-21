@@ -13,6 +13,7 @@ import nl.aurorion.blockregen.system.region.struct.RegenerationRegion;
 import nl.aurorion.blockregen.system.region.struct.RegenerationWorld;
 import nl.aurorion.blockregen.system.region.struct.RegionSelection;
 import nl.aurorion.blockregen.util.LocationUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -505,7 +506,7 @@ public class Commands implements CommandExecutor {
                     }
                 }
 
-                toRegen.forEach(RegenerationProcess::regenerate);
+                Bukkit.getScheduler().runTask(plugin, () -> toRegen.forEach(RegenerationProcess::regenerate));
 
                 sender.sendMessage(Message.REGENERATED_PROCESSES.get()
                         .replace("%count%", String.valueOf(toRegen.size())));

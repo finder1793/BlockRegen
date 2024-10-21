@@ -261,8 +261,9 @@ public class BlockRegen extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if (regenerationManager.getAutoSaveTask() != null)
+        if (regenerationManager.getAutoSaveTask() != null) {
             regenerationManager.getAutoSaveTask().stop();
+        }
 
         regenerationManager.revertAll();
         regenerationManager.save(true);

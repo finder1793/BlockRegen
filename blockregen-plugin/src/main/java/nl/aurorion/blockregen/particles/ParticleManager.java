@@ -18,8 +18,9 @@ public class ParticleManager {
     public void displayParticle(String particleName, Block block) {
         Location location = block.getLocation();
 
-        if (!particles.containsKey(particleName))
+        if (!particles.containsKey(particleName)) {
             return;
+        }
 
         particles.get(particleName).display(location);
         log.fine("Displaying particle " + particleName + " at location " + LocationUtil.locationToString(location));
