@@ -295,15 +295,7 @@ public class BlockListener implements Listener {
             if (preset.isNaturalBreak()) {
 
                 for (ItemStack drop : vanillaDrops) {
-                    XMaterial mat = XMaterial.matchXMaterial(drop);
-                    ItemStack item = mat.parseItem();
-
-                    if (item == null) {
-                        log.severe(String.format("Material %s not supported on this version.", mat));
-                        continue;
-                    }
-
-                    drops.put(item, preset.isDropNaturally());
+                    drops.put(drop, preset.isDropNaturally());
                 }
 
                 experience += vanillaExperience.get();
