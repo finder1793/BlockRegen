@@ -395,6 +395,11 @@ public class BlockListener implements Listener {
     }
 
     private void giveExp(Location location, Player player, int amount, boolean naturally) {
+
+        if (amount == 0) {
+            return;
+        }
+
         if (naturally) {
             spawnExp(location, amount);
         } else {
