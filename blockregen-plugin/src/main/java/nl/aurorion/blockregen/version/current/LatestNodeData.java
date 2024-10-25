@@ -12,6 +12,7 @@ import nl.aurorion.blockregen.version.api.NodeData;
 import org.bukkit.Axis;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.Skull;
 import org.bukkit.block.data.*;
 import org.bukkit.block.data.type.Stairs;
 
@@ -42,7 +43,7 @@ public class LatestNodeData implements NodeData {
 
         log.fine(String.format("Checking against data %s", this));
 
-        if (this.skull != null) {
+        if (this.skull != null && block.getState() instanceof Skull) {
             try {
                 String profileString = XSkull.of(block).getProfileString();
 
@@ -92,10 +93,8 @@ public class LatestNodeData implements NodeData {
     public void load(Block block) {
         BlockData data = block.getBlockData();
 
-        try {
+        if (block.getState() instanceof Skull) {
             this.skull = XSkull.of(block).getProfileString();
-        } catch (InvalidProfileContainerException e) {
-            // not a skull
         }
 
         if (data instanceof Directional directional) {
@@ -147,7 +146,7 @@ public class LatestNodeData implements NodeData {
 
         block.setBlockData(blockData);
 
-        if (this.skull != null) {
+        if (this.skull != null && block.getState() instanceof Skull) {
             XSkull.of(block)
                     .profile(Profileable.detect(this.skull))
                     .apply();
