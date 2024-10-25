@@ -5,7 +5,6 @@ import com.google.common.base.Strings;
 import lombok.extern.java.Log;
 import nl.aurorion.blockregen.BlockRegen;
 import nl.aurorion.blockregen.system.event.struct.PresetEvent;
-import nl.aurorion.blockregen.system.material.parser.MaterialParser;
 import nl.aurorion.blockregen.system.preset.struct.Amount;
 import nl.aurorion.blockregen.system.preset.struct.BlockPreset;
 import nl.aurorion.blockregen.system.preset.struct.PresetConditions;
@@ -19,7 +18,10 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 @Log
 public class PresetManager {
@@ -117,7 +119,8 @@ public class PresetManager {
         }
 
         try {
-            preset.setReplaceMaterial(this.loadDynamicMaterial(replaceMaterial));
+            preset.setReplaceMaterial(this.plugin.getMaterialManager().parseDynamicMaterial(replaceMaterial));
+            // preset.setReplaceMaterial(this.loadDynamicMaterial(replaceMaterial));
         } catch (IllegalArgumentException e) {
             log.warning("Dynamic material ( " + replaceMaterial + " ) in replace-block material for " + name
                     + " is invalid: " + e.getMessage());
@@ -132,7 +135,7 @@ public class PresetManager {
             preset.setRegenMaterial(DynamicMaterial.withOnlyDefault(targetMaterial));
         } else {
             try {
-                preset.setRegenMaterial(this.loadDynamicMaterial(regenerateIntoInput));
+                preset.setRegenMaterial(this.plugin.getMaterialManager().parseDynamicMaterial(regenerateIntoInput));
             } catch (IllegalArgumentException e) {
                 log.warning("Dynamic material ( " + regenerateIntoInput + " ) in regenerate-into material for " + name
                         + " is invalid: " + e.getMessage());
@@ -211,77 +214,5 @@ public class PresetManager {
             plugin.getEventManager().addEvent(event);
 
         presets.put(name, preset);
-    }
-
-    private DynamicMaterial loadDynamicMaterial(String input) throws IllegalArgumentException {
-        if (Strings.isNullOrEmpty(input)) {
-            throw new IllegalArgumentException("Input string cannot be null");
-        }
-
-        // clear blanks?
-        input = input.replace(" ", "").trim();
-
-        List<String> materials;
-        Map<TargetMaterial, Double> valuedMaterials = new HashMap<>();
-
-        materials = Arrays.asList(input.split(";"));
-
-        if (materials.isEmpty()) {
-            throw new IllegalArgumentException("Dynamic material " + input + " doesn't have the correct syntax");
-        }
-
-        if (materials.size() == 1) {
-            log.fine(String.format("%s -> single material", input));
-            return DynamicMaterial.withOnlyDefault(this.plugin.getMaterialManager().parseMaterial(materials.getFirst()));
-        }
-
-        // Materials without a chance.
-        List<TargetMaterial> restMaterials = new ArrayList<>();
-
-        for (String material : materials) {
-
-            // Separate parts
-            String[] parts = material.split(":");
-
-            // First either prefix or material
-
-            MaterialParser parser = this.plugin.getMaterialManager().getParser(parts[0].toLowerCase());
-
-            if (parser == null) {
-                parser = this.plugin.getMaterialManager().getParser(null);
-
-                if (parser == null) {
-                    log.fine(String.format("No valid parser found for material %s in input %s", material, input));
-                    continue;
-                }
-            } else {
-                // remove parts[0] aka the parser prefix
-                parts = Arrays.copyOfRange(parts, 1, parts.length);
-            }
-
-            TargetMaterial mat = parser.parseMaterial(parts[0]);
-
-            // chance
-            if (parts.length == 2) {
-                double chance = Double.parseDouble(parts[1]);
-                // Chance in config is in %, go into <0; 1>
-                valuedMaterials.put(mat, chance / 100);
-                log.fine(String.format("Added material %s at chance %.2f%%", material, chance));
-            } else {
-                restMaterials.add(mat);
-            }
-        }
-
-        double rest = 1.0 - valuedMaterials.values().stream().mapToDouble(e -> e).sum();
-
-        if (restMaterials.size() == 1) {
-            valuedMaterials.put(restMaterials.getFirst(), rest);
-        } else {
-            // Split the rest of the chance between the materials.
-            double chance = rest / restMaterials.size();
-            restMaterials.forEach(mat -> valuedMaterials.put(mat, chance));
-        }
-
-        return DynamicMaterial.from(valuedMaterials);
     }
 }

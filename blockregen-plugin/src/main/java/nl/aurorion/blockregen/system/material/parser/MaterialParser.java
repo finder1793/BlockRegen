@@ -13,4 +13,9 @@ public interface MaterialParser {
      * @throws IllegalArgumentException if the provided {@code input} is not a valid oraxen block id
      */
     TargetMaterial parseMaterial(String input) throws IllegalArgumentException;
+
+    // Return true if the material syntax contains colons.
+    default boolean containsColon() {
+        return false;
+    }
 }

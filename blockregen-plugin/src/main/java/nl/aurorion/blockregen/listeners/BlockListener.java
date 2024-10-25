@@ -4,7 +4,6 @@ import com.bekvon.bukkit.residence.api.ResidenceApi;
 import com.bekvon.bukkit.residence.containers.Flags;
 import com.bekvon.bukkit.residence.protection.ClaimedResidence;
 import com.bekvon.bukkit.residence.protection.ResidencePermissions;
-import com.cryptomorin.xseries.XMaterial;
 import com.palmergames.bukkit.towny.TownyAPI;
 import com.palmergames.bukkit.towny.object.TownBlock;
 import lombok.extern.java.Log;
@@ -50,21 +49,12 @@ public class BlockListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onBreak(BlockBreakEvent event) {
-
-        // Respect cancels on higher priorities.
-        // This should technically never happen as we have ignoreCancelled = false.
-        if (event.isCancelled()) {
-            log.fine("Event already cancelled.");
-            return;
-        }
-
         Player player = event.getPlayer();
         Block block = event.getBlock();
 
         // Check if the block is regenerating already
         RegenerationProcess existingProcess = plugin.getRegenerationManager().getProcess(block);
         if (existingProcess != null) {
-
             // Remove the process
             if (hasBypass(player)) {
                 plugin.getRegenerationManager().removeProcess(existingProcess);
