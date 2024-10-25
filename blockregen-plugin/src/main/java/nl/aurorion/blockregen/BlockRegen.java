@@ -19,6 +19,7 @@ import nl.aurorion.blockregen.providers.JobsProvider;
 import nl.aurorion.blockregen.system.GsonHelper;
 import nl.aurorion.blockregen.system.event.EventManager;
 import nl.aurorion.blockregen.system.material.MaterialManager;
+import nl.aurorion.blockregen.system.material.parser.ItemsAdderMaterialParser;
 import nl.aurorion.blockregen.system.material.parser.MMOItemsMaterialParser;
 import nl.aurorion.blockregen.system.material.parser.MinecraftMaterialParser;
 import nl.aurorion.blockregen.system.material.parser.OraxenMaterialParser;
@@ -38,6 +39,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -100,6 +102,8 @@ public class BlockRegen extends JavaPlugin {
 
     @Getter
     private ConsoleHandler consoleHandler;
+
+    private boolean finishedLoading = false;
 
     private static Logger getParentLogger() {
         return Logger.getLogger(PACKAGE_NAME);
@@ -182,15 +186,18 @@ public class BlockRegen extends JavaPlugin {
         Message.load();
 
         materialManager.registerParser(null, new MinecraftMaterialParser(this));
+        materialManager.registerParser("minecraft", new MinecraftMaterialParser(this));
         checkDependencies(false);
 
         presetManager.loadAll();
         regionManager.load();
         regenerationManager.load();
 
+        finishedLoading = true;
+
         registerListeners();
 
-        getCommand("blockregen").setExecutor(new Commands(this));
+        Objects.requireNonNull(getCommand("blockregen")).setExecutor(new Commands(this));
 
         String ver = getDescription().getVersion();
 
@@ -265,10 +272,12 @@ public class BlockRegen extends JavaPlugin {
             regenerationManager.getAutoSaveTask().stop();
         }
 
-        regenerationManager.revertAll();
-        regenerationManager.save(true);
+        if (finishedLoading) {
+            regenerationManager.revertAll();
+            regenerationManager.save(true);
 
-        regionManager.save();
+            regionManager.save();
+        }
 
         this.teardownLogger();
     }
@@ -299,6 +308,11 @@ public class BlockRegen extends JavaPlugin {
 
         if (getServer().getPluginManager().isPluginEnabled("MMOItems")) {
             materialManager.registerParser("mmoitems", new MMOItemsMaterialParser(this));
+            newDeps = true;
+        }
+
+        if (getServer().getPluginManager().isPluginEnabled("ItemsAdder")) {
+            materialManager.registerParser("ia", new ItemsAdderMaterialParser());
             newDeps = true;
         }
 
