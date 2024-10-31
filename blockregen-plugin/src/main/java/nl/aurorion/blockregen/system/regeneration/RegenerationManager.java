@@ -188,8 +188,6 @@ public class RegenerationManager {
 
         final List<RegenerationProcess> finalCache = new ArrayList<>(cache);
 
-        log.fine("Saving " + finalCache.size() + " regeneration processes..");
-
         CompletableFuture<Void> future = plugin.getGsonHelper().save(finalCache, plugin.getDataFolder().getPath() + "/Data.json")
                 .exceptionally(e -> {
                     log.severe("Could not save processes: " + e.getMessage());
@@ -200,6 +198,8 @@ public class RegenerationManager {
         if (sync) {
             future.join();
         }
+
+        log.info("Saved " + finalCache.size() + " regeneration processes..");
     }
 
     public void load() {
@@ -208,7 +208,7 @@ public class RegenerationManager {
                     cache.clear();
 
                     if (loadedProcesses == null) {
-                        loadedProcesses = new ArrayList<>();
+                        return;
                     }
 
                     for (RegenerationProcess process : loadedProcesses) {
@@ -231,8 +231,10 @@ public class RegenerationManager {
 
                     if (!this.retry) {
                         // Start em
-                        loadedProcesses.forEach(RegenerationProcess::start);
-                        log.info("Loaded " + this.cache.size() + " regeneration process(es)...");
+                        Bukkit.getScheduler().runTask(plugin, () -> {
+                            loadedProcesses.forEach(RegenerationProcess::start);
+                            log.info("Loaded " + this.cache.size() + " regeneration process(es)...");
+                        });
                     } else {
                         log.info(
                                 "One of the worlds is probably not loaded. Loading after complete server load instead.");

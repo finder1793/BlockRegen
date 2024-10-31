@@ -79,7 +79,6 @@ public class RegenerationProcess {
     }
 
     // Return true if the process started, false otherwise.
-    // Can be called async.
     public boolean start() {
 
         // Ensure to stop and null anything that ran before.
@@ -159,8 +158,7 @@ public class RegenerationProcess {
     }
 
     /**
-     * Simply regenerate the block. This method is unsafe to execute from async
-     * context.
+     * Simply regenerate the block.
      */
     public void regenerateBlock() {
         // Set type
@@ -197,6 +195,7 @@ public class RegenerationProcess {
         }
     }
 
+    // Has to be synchronized to run on the next tick. Otherwise, the block does not get replaced.
     public void replaceBlock() {
         if (getReplaceMaterial() == null) {
             return;
