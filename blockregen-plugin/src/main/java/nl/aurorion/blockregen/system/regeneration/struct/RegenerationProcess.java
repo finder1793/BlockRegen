@@ -101,7 +101,7 @@ public class RegenerationProcess {
 
         // No need to start a task when it's time to regenerate already.
         if (timeLeft == 0 || regenerationTime <= System.currentTimeMillis()) {
-            regenerate();
+            Bukkit.getScheduler().runTask(plugin, this::regenerate);
             log.fine("Regenerated the process upon start.");
             return false;
         }
