@@ -48,6 +48,7 @@ public class RawRegion {
 
         RegenerationRegion region = new RegenerationRegion(name, min, max);
         region.setPriority(priority);
+        region.setAll(all);
         return region;
     }
 }

@@ -292,6 +292,7 @@ public class BlockListener implements Listener {
             } else {
                 for (ItemDrop drop : preset.getRewards().getDrops()) {
                     ItemStack itemStack = drop.toItemStack(player, parser);
+
                     if (itemStack == null) {
                         continue;
                     }

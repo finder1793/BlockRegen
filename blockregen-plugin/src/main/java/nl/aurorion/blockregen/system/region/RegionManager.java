@@ -127,6 +127,29 @@ public class RegionManager {
         return rawRegion;
     }
 
+    private void loadWorldRegion(ConfigurationSection section, String name) {
+        String worldName = section.getString("worldName");
+
+        RegenerationWorld world = new RegenerationWorld(name, worldName);
+        world.setPriority(section.getInt("Priority", 1));
+        world.setAll(section.getBoolean("All", true));
+
+        List<String> presets = section.getStringList("Presets");
+
+        for (String presetName : presets) {
+            BlockPreset preset = plugin.getPresetManager().getPreset(presetName);
+
+            if (preset == null) {
+                log.warning(String.format("Preset %s isn't loaded, but is included in region %s.", presetName, world.getName()));
+            }
+
+            world.addPreset(presetName);
+        }
+
+        log.fine(String.format("Loaded regeneration world %s", world));
+        this.loadedAreas.add(world);
+    }
+
     public void load() {
         this.loadedAreas.clear();
         plugin.getFiles().getRegions().load();
@@ -144,15 +167,13 @@ public class RegionManager {
                     continue;
                 }
 
+                // Load a world region
                 if (section.isSet("worldName")) {
-                    // Loading a world
-                    String worldName = section.getString("worldName");
-                    RegenerationWorld world = new RegenerationWorld(name, worldName);
-
-                    log.fine(String.format("Loaded regeneration world %s", world));
-                    this.loadedAreas.add(world);
+                    loadWorldRegion(section, name);
                     continue;
                 }
+
+                // For normal regions we use RawRegion first to ensure it gets loaded (and later saved...).
 
                 RawRegion rawRegion = loadRaw(section);
                 if (rawRegion == null) {
@@ -184,8 +205,6 @@ public class RegionManager {
 
             region.addPreset(presetName);
         }
-
-        region.setAll(rawRegion.isAll());
 
         this.loadedAreas.add(region);
         this.sort();
