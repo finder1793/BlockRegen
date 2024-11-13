@@ -46,7 +46,10 @@ public class RawRegion {
             return null;
         }
 
-        RegenerationRegion region = new RegenerationRegion(name, min, max);
+        Location actualMin = new Location(min.getWorld(), Double.min(min.getX(), max.getX()), Double.min(min.getY(), max.getY()), Double.min(min.getZ(), max.getZ()));
+        Location actualMax = new Location(min.getWorld(), Double.max(min.getX(), max.getX()), Double.max(min.getY(), max.getY()), Double.max(min.getZ(), max.getZ()));
+
+        RegenerationRegion region = new RegenerationRegion(name, actualMin, actualMax);
         region.setPriority(priority);
         region.setAll(all);
         return region;
