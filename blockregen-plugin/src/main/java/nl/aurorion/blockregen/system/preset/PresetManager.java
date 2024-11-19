@@ -156,6 +156,15 @@ public class PresetManager {
         // Drop naturally
         preset.setDropNaturally(section.getBoolean("drop-naturally", true));
 
+        // Handle crops
+        preset.setHandleCrops(section.getBoolean("handle-crops", true));
+
+        // Solid ground
+        preset.setCheckSolidGround(section.getBoolean("check-solid-ground", true));
+
+        // Regenerate whole
+        preset.setRegenerateWhole(section.getBoolean("regenerate-whole", false));
+
         // Block Break Sound
         String sound = section.getString("sound");
 

@@ -34,6 +34,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.event.Listener;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -45,7 +46,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Log
-public class BlockRegen extends JavaPlugin {
+public class BlockRegen extends JavaPlugin implements Listener {
 
     private static final String PACKAGE_NAME = BlockRegen.class.getPackage().getName();
 

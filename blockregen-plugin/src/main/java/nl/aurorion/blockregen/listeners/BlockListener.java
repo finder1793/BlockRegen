@@ -16,11 +16,13 @@ import nl.aurorion.blockregen.system.preset.struct.drop.ExperienceDrop;
 import nl.aurorion.blockregen.system.preset.struct.drop.ItemDrop;
 import nl.aurorion.blockregen.system.regeneration.struct.RegenerationProcess;
 import nl.aurorion.blockregen.system.region.struct.RegenerationArea;
+import nl.aurorion.blockregen.util.BlockUtil;
 import nl.aurorion.blockregen.util.ItemUtil;
 import nl.aurorion.blockregen.util.LocationUtil;
 import nl.aurorion.blockregen.util.TextUtil;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.Item;
@@ -30,12 +32,13 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 @Log
@@ -130,8 +133,60 @@ public class BlockListener implements Listener {
             return;
         }
 
-        RegenerationProcess process = plugin.getRegenerationManager().createProcess(block, preset, isInRegion ? region.getName() : null);
-        process(process, preset, event);
+        // Check block permissions
+        // Mostly kept out of backwards compatibility with peoples settings and expectancies over how this works.
+        if (lacksPermission(player, "blockregen.block", block.getType().toString()) && !player.isOp()) {
+            Message.PERMISSION_BLOCK_ERROR.send(event.getPlayer());
+            event.setCancelled(true);
+            log.fine(String.format("Player doesn't have permission for block %s.", block.getType()));
+            return;
+        }
+
+        // Check preset permissions
+        if (lacksPermission(player, "blockregen.preset", preset.getName()) && !player.isOp()) {
+            Message.PERMISSION_BLOCK_ERROR.send(event.getPlayer());
+            event.setCancelled(true);
+            log.fine(String.format("Player doesn't have permission for preset %s.", preset.getName()));
+            return;
+        }
+
+        // Check conditions
+        if (!preset.getConditions().check(player)) {
+            event.setCancelled(true);
+            log.fine("Player doesn't meet conditions.");
+            return;
+        }
+
+        // Event API
+        BlockRegenBlockBreakEvent blockRegenBlockBreakEvent = new BlockRegenBlockBreakEvent(event, preset);
+        Bukkit.getServer().getPluginManager().callEvent(blockRegenBlockBreakEvent);
+
+        if (blockRegenBlockBreakEvent.isCancelled()) {
+            log.fine("BlockRegenBreakEvent got cancelled.");
+            return;
+        }
+
+        Block above = block.getRelative(BlockFace.UP);
+
+        // Multiblock vegetation - sugarcane, cacti, bamboo
+        // Handle those blocks as well (cancel drops, rewards, etc.), but don't start regeneration processes for those.
+        // Only start a regeneration process if the bottom block is broken. (configurable)
+        if (BlockUtil.isMultiblockCrop(plugin, block) && preset.isHandleCrops()) {
+            handleMultiblockCrop(event, block, player, preset, isInRegion ? region.getName() : null);
+        } else {
+
+            // Crop possibly above this block.
+            if (BlockUtil.isMultiblockCrop(plugin, above)) {
+                BlockPreset abovePreset = plugin.getPresetManager().getPreset(above);
+
+                if (abovePreset != null && abovePreset.isHandleCrops()) {
+                    handleMultiblockCrop(event, above, player, abovePreset, isInRegion ? region.getName() : null);
+                }
+            }
+
+            RegenerationProcess process = plugin.getRegenerationManager().createProcess(block, preset, isInRegion ? region.getName() : null);
+            handleBreak(process, preset, event);
+        }
     }
 
     // Check for supported protection plugins' regions and settings.
@@ -214,46 +269,66 @@ public class BlockListener implements Listener {
                 && player.getGameMode() == GameMode.CREATIVE);
     }
 
-    private void process(RegenerationProcess process, BlockPreset preset, BlockBreakEvent event) {
-        Player player = event.getPlayer();
+    private void handleMultiblockCrop(BlockBreakEvent event, Block block, Player player, BlockPreset preset, @Nullable String region) {
+        boolean regenerateWhole = preset.isRegenerateWhole();
 
+        handleAbove(block, player, (b) -> {
+            if (regenerateWhole) {
+                RegenerationProcess process = plugin.getRegenerationManager().createProcess(b, preset, region);
+                process.start();
+            }
+        });
+
+        Block base = findBase(block);
+
+        log.fine("Base " + BlockUtil.blockToString(base));
+
+        // Only start regeneration when the most bottom block is broken.
+        RegenerationProcess process = null;
+        if (block == base || regenerateWhole) {
+            process = plugin.getRegenerationManager().createProcess(block, preset, region);
+        }
+        handleBreak(process, preset, event);
+    }
+
+    private Block findBase(Block block) {
+        Block below = block.getRelative(BlockFace.DOWN);
+        if (below.getType() != block.getType()) {
+            return block;
+        }
+        return findBase(below);
+    }
+
+    private void handleAbove(Block block, Player player, Consumer<Block> startProcess) {
+        Block above = block.getRelative(BlockFace.UP);
+
+        // break the blocks manually, handle them separately.
+        if (BlockUtil.isMultiblockCrop(plugin, above)) {
+
+            // recurse from top to bottom
+            handleAbove(above, player, startProcess);
+
+            BlockPreset abovePreset = plugin.getPresetManager().getPreset(above);
+
+            if (abovePreset != null) {
+                List<ItemStack> vanillaDrops = new ArrayList<>(block.getDrops(plugin.getVersionManager().getMethods().getItemInMainHand(player)));
+
+                above.setType(Material.AIR);
+
+                startProcess.accept(above);
+
+                // Note: none of the blocks seem to drop experience when broken, should be safe to assume 0
+                handleRewards(above.getState(), abovePreset, player, vanillaDrops, 0);
+            }
+        }
+    }
+
+    private void handleBreak(@Nullable RegenerationProcess process, BlockPreset preset, BlockBreakEvent event) {
+        Player player = event.getPlayer();
         Block block = event.getBlock();
         BlockState state = block.getState();
 
-        // Check block permissions
-        // Mostly kept out of backwards compatibility with peoples settings and expectancies over how this works.
-        if (lacksPermission(player, "blockregen.block", block.getType().toString()) && !player.isOp()) {
-            Message.PERMISSION_BLOCK_ERROR.send(event.getPlayer());
-            event.setCancelled(true);
-            log.fine(String.format("Player doesn't have permission for block %s.", block.getType()));
-            return;
-        }
-
-        // Check preset permissions
-        if (lacksPermission(player, "blockregen.preset", preset.getName()) && !player.isOp()) {
-            Message.PERMISSION_BLOCK_ERROR.send(event.getPlayer());
-            event.setCancelled(true);
-            log.fine(String.format("Player doesn't have permission for preset %s.", preset.getName()));
-            return;
-        }
-
-        // Check conditions
-        if (!preset.getConditions().check(player)) {
-            event.setCancelled(true);
-            log.fine("Player doesn't meet conditions.");
-            return;
-        }
-
-        // Event API
-        BlockRegenBlockBreakEvent blockRegenBlockBreakEvent = new BlockRegenBlockBreakEvent(event, preset);
-        Bukkit.getServer().getPluginManager().callEvent(blockRegenBlockBreakEvent);
-
-        if (blockRegenBlockBreakEvent.isCancelled()) {
-            log.fine("BlockRegenBreakEvent got cancelled.");
-            return;
-        }
-
-        final AtomicInteger vanillaExperience = new AtomicInteger(event.getExpToDrop());
+        int vanillaExperience = event.getExpToDrop();
 
         // We're dropping the items ourselves.
         if (plugin.getVersionManager().isCurrentAbove("1.8", false)) {
@@ -263,8 +338,7 @@ public class BlockListener implements Listener {
 
         event.setExpToDrop(0);
 
-        List<ItemStack> vanillaDrops = new ArrayList<>(
-                block.getDrops(plugin.getVersionManager().getMethods().getItemInMainHand(player)));
+        List<ItemStack> vanillaDrops = new ArrayList<>(block.getDrops(plugin.getVersionManager().getMethods().getItemInMainHand(player)));
 
         // Cancels item drops below 1.8.
         if (plugin.getVersionManager().isCurrentBelow("1.8", true)) {
@@ -272,7 +346,16 @@ public class BlockListener implements Listener {
         }
 
         // Start regeneration
-        process.start();
+        // After setting to AIR on 1.8 to prevent conflict
+        if (process != null) {
+            process.start();
+        }
+
+        handleRewards(state, preset, player, vanillaDrops, vanillaExperience);
+    }
+
+    private void handleRewards(BlockState state, BlockPreset preset, Player player, List<ItemStack> vanillaDrops, int vanillaExperience) {
+        Block block = state.getBlock();
 
         Function<String, String> parser = (str) -> TextUtil.parse(str, player, block);
 
@@ -288,7 +371,7 @@ public class BlockListener implements Listener {
                     drops.put(drop, preset.isDropNaturally());
                 }
 
-                experience += vanillaExperience.get();
+                experience += vanillaExperience;
             } else {
                 for (ItemDrop drop : preset.getRewards().getDrops()) {
                     ItemStack itemStack = drop.toItemStack(player, parser);

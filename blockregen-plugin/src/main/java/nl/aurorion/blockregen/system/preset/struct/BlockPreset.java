@@ -24,6 +24,14 @@ public class BlockPreset {
     private boolean applyFortune;
     private boolean dropNaturally;
 
+    // Specific handling for crops (cactus, sugarcane, wheat,...)
+    private boolean handleCrops;
+    // Require solid ground under blocks that require it (cactus, sugarcane, wheat,...)
+    private boolean checkSolidGround;
+
+    // Regenerate the whole multiblock crop
+    private boolean regenerateWhole;
+
     private PresetConditions conditions;
     private PresetRewards rewards;
 

@@ -14,6 +14,7 @@ import nl.aurorion.blockregen.version.api.NodeData;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.Objects;
@@ -21,7 +22,6 @@ import java.util.UUID;
 
 @Log
 @Data
-// TODO: Move all the logic into the manager. Use this only as a data structure.
 public class RegenerationProcess {
 
     private final UUID id = UUID.randomUUID();
@@ -108,10 +108,14 @@ public class RegenerationProcess {
 
         Bukkit.getScheduler().runTask(plugin, this::replaceBlock);
 
-        // Start the task
-        this.task = Bukkit.getScheduler().runTaskLater(plugin, this::regenerate, timeLeft / 50);
-        log.fine(String.format("Regenerate %s in %ds", this, timeLeft / 1000));
+        startTask();
         return true;
+    }
+
+    private void startTask() {
+        // Start the task
+        this.task = Bukkit.getScheduler().runTaskLater(BlockRegen.getInstance(), this::regenerate, timeLeft / 50);
+        log.fine(String.format("Regenerate %s in %ds", this, timeLeft / 1000));
     }
 
     public void stop() {
@@ -127,6 +131,7 @@ public class RegenerationProcess {
      * Calls BlockRegenBlockRegenerationEvent.
      */
     public void regenerate() {
+        log.fine("Regenerating " + this + "...");
 
         // Cancel the task if running.
         if (task != null) {
@@ -134,6 +139,38 @@ public class RegenerationProcess {
         }
 
         BlockRegen plugin = BlockRegen.getInstance();
+
+        // If this block requires a block under it, wait for it to be there,
+        // only if there's a running process at the block directly under.
+        //
+        // Otherwise, throw this process away.
+
+        TargetMaterial regenerateInto = getRegenerateInto();
+
+        // todo: single block crops, maybe someone is using farmland as a regenerative block...
+        if (regenerateInto.requiresSolidGround() && preset.isCheckSolidGround()) {
+            Block below = this.block.getRelative(BlockFace.DOWN);
+            RegenerationProcess processBelow = plugin.getRegenerationManager().getProcess(below);
+
+            if (!below.getType().isSolid()) {
+                if (processBelow != null) {
+                    long delay = processBelow.getRegenerationTime() >= this.getRegenerationTime() ? processBelow.getRegenerationTime() - this.getRegenerationTime() + 100 : 1000;
+
+                    // Regenerate with the block below.
+                    this.timeLeft = delay;
+                    this.regenerationTime = System.currentTimeMillis() + timeLeft;
+
+                    log.fine("Delaying " + this + " to wait for " + processBelow + " delay: " + delay);
+
+                    startTask();
+                } else {
+                    // no block under, no regeneration,... no hope
+                    log.fine("No block under " + this + ", no point regenerating.");
+                    plugin.getRegenerationManager().removeProcess(this);
+                }
+                return;
+            }
+        }
 
         // Call the event
         BlockRegenBlockRegenerationEvent blockRegenBlockRegenEvent = new BlockRegenBlockRegenerationEvent(this);

@@ -15,6 +15,13 @@ public interface TargetMaterial {
      */
     void place(Block block);
 
+    /**
+     * Whether the material requires a block underneath it.
+     * */
+    default boolean requiresSolidGround() {
+        return false;
+    }
+
     default void applyData(Block block) {
         //
     }
