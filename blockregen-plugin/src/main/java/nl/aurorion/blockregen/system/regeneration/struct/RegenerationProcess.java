@@ -147,7 +147,6 @@ public class RegenerationProcess {
 
         TargetMaterial regenerateInto = getRegenerateInto();
 
-        // todo: single block crops, maybe someone is using farmland as a regenerative block...
         if (regenerateInto.requiresSolidGround() && preset.isCheckSolidGround()) {
             Block below = this.block.getRelative(BlockFace.DOWN);
             RegenerationProcess processBelow = plugin.getRegenerationManager().getProcess(below);

@@ -4,6 +4,7 @@ import com.bekvon.bukkit.residence.api.ResidenceApi;
 import com.bekvon.bukkit.residence.containers.Flags;
 import com.bekvon.bukkit.residence.protection.ClaimedResidence;
 import com.bekvon.bukkit.residence.protection.ResidencePermissions;
+import com.cryptomorin.xseries.XBlock;
 import com.palmergames.bukkit.towny.TownyAPI;
 import com.palmergames.bukkit.towny.object.TownBlock;
 import lombok.extern.java.Log;
@@ -40,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 @Log
 public class BlockListener implements Listener {
@@ -174,13 +176,22 @@ public class BlockListener implements Listener {
         if (BlockUtil.isMultiblockCrop(plugin, block) && preset.isHandleCrops()) {
             handleMultiblockCrop(event, block, player, preset, isInRegion ? region.getName() : null);
         } else {
+            BlockPreset abovePreset = plugin.getPresetManager().getPreset(above);
 
-            // Crop possibly above this block.
-            if (BlockUtil.isMultiblockCrop(plugin, above)) {
-                BlockPreset abovePreset = plugin.getPresetManager().getPreset(above);
-
-                if (abovePreset != null && abovePreset.isHandleCrops()) {
+            if (abovePreset != null && abovePreset.isHandleCrops()) {
+                // Crop possibly above this block.
+                if (BlockUtil.isMultiblockCrop(plugin, above)) {
+                    // Multiblock crops (cactus, sugarcane,...)
                     handleMultiblockCrop(event, above, player, abovePreset, isInRegion ? region.getName() : null);
+                } else if (XBlock.isCrop(plugin.getVersionManager().getMethods().getType(above))) {
+                    // Single crops (wheat, carrots,...)
+                    List<ItemStack> vanillaDrops = new ArrayList<>(block.getDrops(plugin.getVersionManager().getMethods().getItemInMainHand(player)));
+
+                    RegenerationProcess process = plugin.getRegenerationManager().createProcess(above, abovePreset, isInRegion ? region.getName() : null);
+                    process.start();
+
+                    // Note: none of the blocks seem to drop experience when broken, should be safe to assume 0
+                    handleRewards(above.getState(), abovePreset, player, vanillaDrops, 0);
                 }
             }
 
@@ -272,10 +283,13 @@ public class BlockListener implements Listener {
     private void handleMultiblockCrop(BlockBreakEvent event, Block block, Player player, BlockPreset preset, @Nullable String region) {
         boolean regenerateWhole = preset.isRegenerateWhole();
 
-        handleAbove(block, player, (b) -> {
+        handleMultiblockAbove(block, player, above -> BlockUtil.isMultiblockCrop(plugin, above), (b) -> {
             if (regenerateWhole) {
                 RegenerationProcess process = plugin.getRegenerationManager().createProcess(b, preset, region);
                 process.start();
+            } else {
+                // Just destroy...
+                b.setType(Material.AIR);
             }
         });
 
@@ -299,21 +313,19 @@ public class BlockListener implements Listener {
         return findBase(below);
     }
 
-    private void handleAbove(Block block, Player player, Consumer<Block> startProcess) {
+    private void handleMultiblockAbove(Block block, Player player, Predicate<Block> filter, Consumer<Block> startProcess) {
         Block above = block.getRelative(BlockFace.UP);
 
         // break the blocks manually, handle them separately.
-        if (BlockUtil.isMultiblockCrop(plugin, above)) {
+        if (filter.test(above)) {
 
             // recurse from top to bottom
-            handleAbove(above, player, startProcess);
+            handleMultiblockAbove(above, player, filter, startProcess);
 
             BlockPreset abovePreset = plugin.getPresetManager().getPreset(above);
 
             if (abovePreset != null) {
                 List<ItemStack> vanillaDrops = new ArrayList<>(block.getDrops(plugin.getVersionManager().getMethods().getItemInMainHand(player)));
-
-                above.setType(Material.AIR);
 
                 startProcess.accept(above);
 

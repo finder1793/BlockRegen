@@ -1,5 +1,6 @@
 package nl.aurorion.blockregen.system.preset.struct.material;
 
+import com.cryptomorin.xseries.XBlock;
 import com.cryptomorin.xseries.XMaterial;
 import nl.aurorion.blockregen.BlockRegen;
 import nl.aurorion.blockregen.system.preset.struct.BlockPreset;
@@ -52,7 +53,7 @@ public class MinecraftMaterial implements TargetMaterial {
 
     @Override
     public boolean requiresSolidGround() {
-        return BlockUtil.isMultiblockCrop(material);
+        return BlockUtil.isMultiblockCrop(material) || XBlock.isCrop(material);
     }
 
     @Override
