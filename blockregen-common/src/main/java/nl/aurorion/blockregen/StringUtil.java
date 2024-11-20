@@ -39,7 +39,10 @@ public class StringUtil {
             if (entry.getValue() == null) continue;
             builder.append(String.format("%s=%s,", entry.getKey(), entry.getValue()));
         }
-        builder.deleteCharAt(builder.length() - 1);
+        int lastComma = builder.lastIndexOf(",");
+        if (lastComma != -1) {
+            builder.deleteCharAt(lastComma);
+        }
         builder.append("]");
         return builder.toString();
     }

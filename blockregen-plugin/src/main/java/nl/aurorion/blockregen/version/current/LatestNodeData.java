@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Log
 @ToString
@@ -54,6 +55,18 @@ public class LatestNodeData implements NodeData {
     private Integer octave;
     private Note.Tone tone;
     private Boolean sharped;
+
+    // -- Multiface
+
+    private final Set<BlockFace> faces = new HashSet<>();
+
+    public void addFace(BlockFace face) {
+        this.faces.add(face);
+    }
+
+    public boolean hasFace(BlockFace face) {
+        return this.faces.contains(face);
+    }
 
     @Override
     public boolean check(Block block) {
@@ -132,6 +145,13 @@ public class LatestNodeData implements NodeData {
             }
         }
 
+        if (data instanceof MultipleFacing multipleFacing) {
+            // Has to have the exact same faces
+            if (!this.faces.isEmpty() && this.faces != multipleFacing.getFaces()) {
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -173,6 +193,11 @@ public class LatestNodeData implements NodeData {
 
         if (data instanceof Powerable powerable) {
             this.powered = powerable.isPowered();
+        }
+
+        if (data instanceof MultipleFacing multipleFacing) {
+            this.faces.clear();
+            this.faces.addAll(multipleFacing.getFaces());
         }
 
         log.fine(String.format("Loaded block data %s (%s)", block.getType(), this));
@@ -224,6 +249,13 @@ public class LatestNodeData implements NodeData {
             }
         }
 
+        if (blockData instanceof MultipleFacing multipleFacing) {
+            if (!this.faces.isEmpty()) {
+                multipleFacing.getFaces().clear();
+                multipleFacing.getFaces().addAll(this.faces);
+            }
+        }
+
         block.setBlockData(blockData);
 
         if (this.skull != null && block.getState() instanceof Skull) {
@@ -245,7 +277,8 @@ public class LatestNodeData implements NodeData {
                 this.noteId == null &&
                 this.tone == null &&
                 this.sharped == null &&
-                this.powered == null;
+                this.powered == null &&
+                this.faces.isEmpty();
     }
 
     @Override
@@ -262,6 +295,13 @@ public class LatestNodeData implements NodeData {
         entries.put("tone", this.tone);
         entries.put("instrument", this.instrument);
         entries.put("sharped", this.sharped);
-        return StringUtil.serializeNodeDataEntries(entries);
+
+        String serialized = StringUtil.serializeNodeDataEntries(entries);
+        if (!this.faces.isEmpty()) {
+            log.fine(serialized);
+            String faces = this.faces.stream().map(face -> String.format("%s=true", face)).collect(Collectors.joining(","));
+            serialized = serialized.substring(0, serialized.length() - 1) + faces + "]";
+        }
+        return serialized;
     }
 }

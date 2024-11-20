@@ -59,6 +59,36 @@ public class LatestNodeDataParser implements NodeDataParser {
             .property("powered", (nodeData, value) -> {
                 nodeData.setPowered(Boolean.parseBoolean(value));
             })
+            .property("east", (nodeData, value) -> {
+                if ("true".equalsIgnoreCase(value)) {
+                    nodeData.addFace(BlockFace.EAST);
+                }
+            })
+            .property("north", (nodeData, value) -> {
+                if ("true".equalsIgnoreCase(value)) {
+                    nodeData.addFace(BlockFace.NORTH);
+                }
+            })
+            .property("south", (nodeData, value) -> {
+                if ("true".equalsIgnoreCase(value)) {
+                    nodeData.addFace(BlockFace.SOUTH);
+                }
+            })
+            .property("west", (nodeData, value) -> {
+                if ("true".equalsIgnoreCase(value)) {
+                    nodeData.addFace(BlockFace.WEST);
+                }
+            })
+            .property("up", (nodeData, value) -> {
+                if ("true".equalsIgnoreCase(value)) {
+                    nodeData.addFace(BlockFace.UP);
+                }
+            })
+            .property("down", (nodeData, value) -> {
+                if ("true".equalsIgnoreCase(value)) {
+                    nodeData.addFace(BlockFace.DOWN);
+                }
+            })
             .property("skull", (LatestNodeData::setSkull));
 
     @Override

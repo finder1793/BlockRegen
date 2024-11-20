@@ -1,6 +1,7 @@
 package nl.aurorion.blockregen.listeners;
 
 import com.cryptomorin.xseries.XMaterial;
+import lombok.extern.java.Log;
 import nl.aurorion.blockregen.BlockRegen;
 import nl.aurorion.blockregen.Message;
 import nl.aurorion.blockregen.system.preset.struct.BlockPreset;
@@ -17,6 +18,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
 
+@Log
 public class PlayerListener implements Listener {
 
     private final BlockRegen plugin;
@@ -136,6 +138,7 @@ public class PlayerListener implements Listener {
             data.load(event.getClickedBlock());
 
             player.sendMessage(Message.DATA_CHECK.get(player).replace("%block%", material == null ? "Unsupported material" : material.name()));
+            log.fine("BlockData: " + event.getClickedBlock().getBlockData().getAsString());
             if (!data.isEmpty()) {
                 player.sendMessage(Message.DATA_CHECK_NODE_DATA.get(player).replace("%data%", String.format("%s%s", material == null ? "Unsupported material" : material.name(), data.getPrettyString())));
             }
