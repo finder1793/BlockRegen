@@ -10,14 +10,19 @@ import lombok.extern.java.Log;
 import nl.aurorion.blockregen.StringUtil;
 import nl.aurorion.blockregen.version.api.NodeData;
 import org.bukkit.Axis;
+import org.bukkit.Instrument;
+import org.bukkit.Note;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Skull;
 import org.bukkit.block.data.*;
+import org.bukkit.block.data.type.NoteBlock;
 import org.bukkit.block.data.type.Stairs;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 @Log
 @ToString
@@ -36,6 +41,19 @@ public class LatestNodeData implements NodeData {
     private Integer age;
 
     private String skull;
+
+    // -- Note Blocks
+
+    private Boolean powered;
+
+    private Instrument instrument;
+    private Byte noteId;
+
+    // Most resource packs should only use the internal noteId (maybe powered).
+    // But just in case include other properties.
+    private Integer octave;
+    private Note.Tone tone;
+    private Boolean sharped;
 
     @Override
     public boolean check(Block block) {
@@ -86,6 +104,34 @@ public class LatestNodeData implements NodeData {
             }
         }
 
+        if (data instanceof NoteBlock noteBlock) {
+            if (this.octave != null && this.octave != noteBlock.getNote().getOctave()) {
+                return false;
+            }
+
+            if (this.noteId != null && this.noteId != noteBlock.getNote().getId()) {
+                return false;
+            }
+
+            if (this.tone != null && this.tone != noteBlock.getNote().getTone()) {
+                return false;
+            }
+
+            if (this.sharped != null && this.sharped != noteBlock.getNote().isSharped()) {
+                return false;
+            }
+
+            if (this.instrument != null && this.instrument != noteBlock.getInstrument()) {
+                return false;
+            }
+        }
+
+        if (data instanceof Powerable powerable) {
+            if (this.powered != null && this.powered != powerable.isPowered()) {
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -117,6 +163,18 @@ public class LatestNodeData implements NodeData {
             this.age = ageable.getAge();
         }
 
+        if (data instanceof NoteBlock noteBlock) {
+            this.instrument = noteBlock.getInstrument();
+            this.octave = noteBlock.getNote().getOctave();
+            this.tone = noteBlock.getNote().getTone();
+            this.sharped = noteBlock.getNote().isSharped();
+            this.noteId = noteBlock.getNote().getId();
+        }
+
+        if (data instanceof Powerable powerable) {
+            this.powered = powerable.isPowered();
+        }
+
         log.fine(String.format("Loaded block data %s (%s)", block.getType(), this));
     }
 
@@ -144,6 +202,28 @@ public class LatestNodeData implements NodeData {
             ((Ageable) blockData).setAge(this.age);
         }
 
+        if (blockData instanceof NoteBlock noteBlock) {
+            if (this.instrument != null) {
+                noteBlock.setInstrument(this.instrument);
+            }
+
+            if (this.noteId != null) {
+                Note note = new Note(this.noteId);
+                noteBlock.setNote(note);
+            }
+
+            if (this.tone != null && this.octave != null) {
+                Note note = new Note(this.octave, this.tone, this.sharped != null && sharped);
+                noteBlock.setNote(note);
+            }
+        }
+
+        if (blockData instanceof Powerable powerable) {
+            if (this.powered != null) {
+                powerable.setPowered(this.powered);
+            }
+        }
+
         block.setBlockData(blockData);
 
         if (this.skull != null && block.getState() instanceof Skull) {
@@ -155,7 +235,17 @@ public class LatestNodeData implements NodeData {
 
     @Override
     public boolean isEmpty() {
-        return this.facing == null && this.stairShape == null && this.axis == null && this.rotation == null && this.age == null;
+        return this.facing == null &&
+                this.stairShape == null &&
+                this.axis == null &&
+                this.rotation == null &&
+                this.age == null &&
+                this.instrument == null &&
+                this.octave == null &&
+                this.noteId == null &&
+                this.tone == null &&
+                this.sharped == null &&
+                this.powered == null;
     }
 
     @Override
@@ -167,6 +257,11 @@ public class LatestNodeData implements NodeData {
         entries.put("rotation", this.rotation);
         entries.put("age", this.age);
         entries.put("skull", this.skull);
+        entries.put("noteId", this.noteId);
+        entries.put("octave", this.octave);
+        entries.put("tone", this.tone);
+        entries.put("instrument", this.instrument);
+        entries.put("sharped", this.sharped);
         return StringUtil.serializeNodeDataEntries(entries);
     }
 }

@@ -5,7 +5,7 @@ import lombok.extern.java.Log;
 import nl.aurorion.blockregen.BlockRegen;
 import nl.aurorion.blockregen.system.preset.struct.material.MinecraftMaterial;
 import nl.aurorion.blockregen.system.preset.struct.material.TargetMaterial;
-import nl.aurorion.blockregen.util.ParseUtil;
+import nl.aurorion.blockregen.ParseUtil;
 import nl.aurorion.blockregen.version.api.NodeData;
 
 @Log

@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.java.Log;
 import nl.aurorion.blockregen.BlockRegen;
 import nl.aurorion.blockregen.Message;
-import nl.aurorion.blockregen.util.ParseUtil;
+import nl.aurorion.blockregen.ParseUtil;
 import nl.aurorion.blockregen.util.TextUtil;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;

@@ -7,7 +7,7 @@ import lombok.Setter;
 import lombok.extern.java.Log;
 import nl.aurorion.blockregen.BlockRegen;
 import nl.aurorion.blockregen.system.preset.struct.drop.ItemDrop;
-import nl.aurorion.blockregen.util.ParseUtil;
+import nl.aurorion.blockregen.ParseUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;

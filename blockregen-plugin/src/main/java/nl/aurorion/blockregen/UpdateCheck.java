@@ -1,7 +1,6 @@
 package nl.aurorion.blockregen;
 
 import lombok.Getter;
-import nl.aurorion.blockregen.util.ParseUtil;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.BufferedReader;
