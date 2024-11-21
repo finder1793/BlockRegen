@@ -138,7 +138,6 @@ public class PlayerListener implements Listener {
             data.load(event.getClickedBlock());
 
             player.sendMessage(Message.DATA_CHECK.get(player).replace("%block%", material == null ? "Unsupported material" : material.name()));
-            log.fine("BlockData: " + event.getClickedBlock().getBlockData().getAsString());
             if (!data.isEmpty()) {
                 player.sendMessage(Message.DATA_CHECK_NODE_DATA.get(player).replace("%data%", String.format("%s%s", material == null ? "Unsupported material" : material.name(), data.getPrettyString())));
             }
