@@ -13,7 +13,8 @@ public class DiscreteGenerator<T> {
     public static <T> DiscreteGenerator<T> fromProbabilityFunction(Map<T, Double> probabilityFunction) throws IllegalArgumentException {
         // check that all probabilities add up to 1
         double sum = probabilityFunction.values().stream().mapToDouble(e -> e).sum();
-        if (Math.abs(sum - 1.0) > Double.MIN_NORMAL) {
+        // Using a lower eps for comparison has no significant effect on the probability.
+        if (Math.abs(sum - 1.0) > 1E-10) {
             throw new IllegalArgumentException(String.format("Probability function must add to 1 (value: %.2f).", sum));
         }
         return new DiscreteGenerator<>(probabilityFunction);
