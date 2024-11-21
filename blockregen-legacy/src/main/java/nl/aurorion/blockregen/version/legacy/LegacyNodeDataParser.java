@@ -30,7 +30,8 @@ public class LegacyNodeDataParser implements NodeDataParser {
             .property("inverted", (nodeData, value) -> {
                 boolean inverted = Boolean.parseBoolean(value);
                 nodeData.setInverted(inverted);
-            });
+            })
+            .property("skull", (LegacyNodeData::setSkull));
 
     @Override
     public NodeData parse(String input) {
