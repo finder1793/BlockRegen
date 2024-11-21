@@ -72,7 +72,7 @@ public class LatestNodeData implements NodeData {
     public boolean check(Block block) {
         BlockData data = block.getBlockData();
 
-        log.fine(String.format("Checking against data %s", this));
+        log.fine(String.format("Checking %s against block %s", this, data.getAsString()));
 
         if (this.skull != null && block.getState() instanceof Skull) {
             try {
@@ -147,7 +147,7 @@ public class LatestNodeData implements NodeData {
 
         if (data instanceof MultipleFacing multipleFacing) {
             // Has to have the exact same faces
-            if (!this.faces.isEmpty() && this.faces != multipleFacing.getFaces()) {
+            if (!this.faces.isEmpty() && !this.faces.equals(multipleFacing.getFaces())) {
                 return false;
             }
         }
@@ -251,8 +251,9 @@ public class LatestNodeData implements NodeData {
 
         if (blockData instanceof MultipleFacing multipleFacing) {
             if (!this.faces.isEmpty()) {
-                multipleFacing.getFaces().clear();
-                multipleFacing.getFaces().addAll(this.faces);
+                for (BlockFace face : multipleFacing.getAllowedFaces()) {
+                    multipleFacing.setFace(face, this.faces.contains(face));
+                }
             }
         }
 
