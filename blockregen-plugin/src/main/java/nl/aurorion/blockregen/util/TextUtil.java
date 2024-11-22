@@ -23,12 +23,14 @@ public class TextUtil {
         string = string.replaceAll("(?i)%prefix%", Message.PREFIX.getValue());
 
         for (Object o : context) {
-            if (o instanceof Player player) {
+            if (o instanceof Player) {
+                Player player = (Player) o;
                 string = string.replaceAll("(?i)%player%", player.getName());
                 if (BlockRegen.getInstance().isUsePlaceholderAPI()) {
                     string = PlaceholderAPI.setPlaceholders((Player) o, string);
                 }
-            } else if (o instanceof Block block) {
+            } else if (o instanceof Block) {
+                Block block = (Block) o;
                 string = string.replaceAll("(?i)%block_x%", String.valueOf(block.getLocation().getBlockX()));
                 string = string.replaceAll("(?i)%block_y%", String.valueOf(block.getLocation().getBlockY()));
                 string = string.replaceAll("(?i)%block_z%", String.valueOf(block.getLocation().getBlockZ()));

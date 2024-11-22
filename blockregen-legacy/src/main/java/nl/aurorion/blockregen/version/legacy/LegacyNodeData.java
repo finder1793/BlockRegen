@@ -54,31 +54,36 @@ public class LegacyNodeData implements NodeData {
             }
         }
 
-        if (data instanceof Directional directional && this.facing != null) {
+        if (data instanceof Directional && this.facing != null) {
+            Directional directional = (Directional) data;
             if (directional.getFacing() != this.facing) {
                 return false;
             }
         }
 
-        if (data instanceof Tree tree && this.facing != null) {
+        if (data instanceof Tree && this.facing != null) {
+            Tree tree = (Tree) data;
             if (tree.getDirection() != this.facing) {
                 return false;
             }
         }
 
-        if (data instanceof Wood wood && this.treeSpecies != null) {
+        if (data instanceof Wood && this.treeSpecies != null) {
+            Wood wood = (Wood) data;
             if (wood.getSpecies() != this.treeSpecies) {
                 return false;
             }
         }
 
-        if (data instanceof Stairs stairs && this.inverted != null) {
+        if (data instanceof Stairs && this.inverted != null) {
+            Stairs stairs = (Stairs) data;
             if (stairs.isInverted() != this.inverted) {
                 return false;
             }
         }
 
-        if (data instanceof Crops crops && this.cropState != null) {
+        if (data instanceof Crops && this.cropState != null) {
+            Crops crops = (Crops) data;
             if (crops.getState() != this.cropState) {
                 return false;
             }
@@ -97,23 +102,28 @@ public class LegacyNodeData implements NodeData {
             // not a skull
         }
 
-        if (data instanceof Directional directional) {
+        if (data instanceof Directional) {
+            Directional directional = (Directional) data;
             this.facing = directional.getFacing();
         }
 
-        if (data instanceof Tree tree) {
+        if (data instanceof Tree) {
+            Tree tree = (Tree) data;
             this.facing = tree.getDirection();
         }
 
-        if (data instanceof Stairs stairs) {
+        if (data instanceof Stairs) {
+            Stairs stairs = (Stairs) data;
             this.inverted = stairs.isInverted();
         }
 
-        if (data instanceof Crops crops) {
+        if (data instanceof Crops) {
+            Crops crops = (Crops) data;
             this.cropState = crops.getState();
         }
 
-        if (data instanceof Wood wood) {
+        if (data instanceof Wood) {
+            Wood wood = (Wood) data;
             this.treeSpecies = wood.getSpecies();
         }
 
@@ -125,23 +135,28 @@ public class LegacyNodeData implements NodeData {
         BlockState state = block.getState();
         MaterialData data = state.getData();
 
-        if (data instanceof Directional directional && this.facing != null) {
+        if (data instanceof Directional && this.facing != null) {
+            Directional directional = (Directional) data;
             directional.setFacingDirection(this.facing);
         }
 
-        if (data instanceof Tree tree && this.facing != null) {
+        if (data instanceof Tree && this.facing != null) {
+            Tree tree = (Tree) data;
             tree.setDirection(this.facing);
         }
 
-        if (data instanceof Wood wood && this.treeSpecies != null) {
+        if (data instanceof Wood && this.treeSpecies != null) {
+            Wood wood = (Wood) data;
             wood.setSpecies(this.treeSpecies);
         }
 
         if (data instanceof Stairs && this.inverted != null && this.inverted) {
-            ((Stairs) data).setInverted(true);
+            Stairs stairs = (Stairs) data;
+            stairs.setInverted(true);
         }
 
-        if (data instanceof Crops crops && this.cropState != null) {
+        if (data instanceof Crops && this.cropState != null) {
+            Crops crops = (Crops) data;
             crops.setState(cropState);
         }
 

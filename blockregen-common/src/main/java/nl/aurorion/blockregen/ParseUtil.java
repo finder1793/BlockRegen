@@ -78,7 +78,7 @@ public class ParseUtil {
 
         Optional<XMaterial> xMaterial = XMaterial.matchXMaterial(input);
 
-        if (xMaterial.isEmpty()) {
+        if (!xMaterial.isPresent()) {
             log.fine("Could not parse material " + input);
             return null;
         }

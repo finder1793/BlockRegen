@@ -198,7 +198,8 @@ public class Commands implements CommandExecutor {
                         }
 
                         for (RegenerationArea area : this.plugin.getRegionManager().getLoadedAreas()) {
-                            if (area instanceof RegenerationWorld world) {
+                            if (area instanceof RegenerationWorld) {
+                                RegenerationWorld world = (RegenerationWorld) area;
                                 if (world.getWorldName().equals(args[3])) {
                                     Message.DUPLICATED_WORLD_REGION.send(player);
                                     return false;
@@ -549,12 +550,11 @@ public class Commands implements CommandExecutor {
                     return false;
                 }
 
-                sender.sendMessage(StringUtil.color("""
-                                &8&m        &r &3BlockRegen &f%version% &8&m        &r
-                                &7If you need help, either read through the wiki page or reach out on discord!&r
-                                
-                                &3Discord &7https://discord.gg/ZCxMca5&r
-                                &6Wiki &7https://github.com/Wertik/BlockRegen/wiki&r""")
+                sender.sendMessage(StringUtil.color(
+                                "&8&m        &r &3BlockRegen &f%version% &8&m        &r\n" +
+                                        "&7If you need help, either read through the wiki page or reach out on discord!&r\n\n" +
+                                        "&3Discord &7https://discord.gg/ZCxMca5&r\n" +
+                                        "&6Wiki &7https://github.com/Wertik/BlockRegen/wiki&r\n")
                         .replaceAll("(?i)%version%", plugin.getDescription().getVersion()));
                 break;
             case "events":
@@ -665,9 +665,11 @@ public class Commands implements CommandExecutor {
 
             message.append(String.format(" &f%s\n", area.getName()));
 
-            if (area instanceof RegenerationRegion region) {
+            if (area instanceof RegenerationRegion) {
+                RegenerationRegion region = (RegenerationRegion) area;
                 message.append(String.format("  &7Area: &f%s &8- &f%s", LocationUtil.locationToString(region.getMin()), LocationUtil.locationToString(region.getMax()))).append('\n');
-            } else if (area instanceof RegenerationWorld world) {
+            } else if (area instanceof RegenerationWorld) {
+                RegenerationWorld world = (RegenerationWorld) area;
                 message.append("  &7World: &f").append(world.getWorldName()).append('\n');
             }
 

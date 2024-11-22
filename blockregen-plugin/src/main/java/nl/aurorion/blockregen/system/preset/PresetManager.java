@@ -170,7 +170,7 @@ public class PresetManager {
 
         if (!Strings.isNullOrEmpty(sound)) {
             Optional<XSound> xSound = XSound.matchXSound(sound);
-            if (xSound.isEmpty()) {
+            if (!xSound.isPresent()) {
                 log.warning("Sound " + sound + " in preset " + name + " is invalid.");
             } else
                 preset.setSound(xSound.get());

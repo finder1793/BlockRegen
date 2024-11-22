@@ -7,6 +7,7 @@ import lombok.extern.java.Log;
 import nl.aurorion.blockregen.BlockRegen;
 import nl.aurorion.blockregen.ParseUtil;
 import nl.aurorion.blockregen.version.ancient.AncientMethods;
+import nl.aurorion.blockregen.version.ancient.AncientNodeData;
 import nl.aurorion.blockregen.version.ancient.AncientNodeDataParser;
 import nl.aurorion.blockregen.version.api.*;
 import nl.aurorion.blockregen.version.current.*;
@@ -64,7 +65,7 @@ public class VersionManager {
                 if (worldGuard != null)
                     useWorldGuard(new LegacyWorldGuardProvider(this.worldGuard));
                 this.methods = new AncientMethods();
-                this.nodeProvider = LegacyNodeData::new;
+                this.nodeProvider = AncientNodeData::new;
                 this.nodeDataParser = new AncientNodeDataParser();
                 break;
             case "1.9":

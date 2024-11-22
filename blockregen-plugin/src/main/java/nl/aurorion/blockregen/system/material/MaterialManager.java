@@ -1,5 +1,7 @@
 package nl.aurorion.blockregen.system.material;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.java.Log;
 import nl.aurorion.blockregen.BlockRegen;
 import nl.aurorion.blockregen.system.material.parser.MaterialParser;
@@ -12,6 +14,7 @@ import java.util.*;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Log
 public class MaterialManager {
@@ -42,7 +45,11 @@ public class MaterialManager {
         return this.registeredParsers.get((prefix == null ? null : prefix.toLowerCase()));
     }
 
-    record Pair<F, S>(F first, S second) {
+    @Data
+    @AllArgsConstructor
+    public static class Pair<F, S> {
+        private final F first;
+        private final S second;
     }
 
     private Pair<TargetMaterial, Double> parseMaterialAndChance(MaterialParser parser, String input) {
@@ -56,11 +63,18 @@ public class MaterialManager {
         // <material>
         // <material>:<chance>
 
-        List<MatchResult> results = matcher.results().toList();
+        List<MatchResult> results = new ArrayList<>();
+
+        while (matcher.find()) {
+            results.add(matcher.toMatchResult());
+        }
+
         long count = results.size();
 
+        log.fine(String.join(",", results.stream().map(MatchResult::group).collect(Collectors.joining(","))) + " " + count);
+
         if (count != 0) {
-            int lastColon = results.getLast().end();
+            int lastColon = results.get(results.size() - 1).end();
 
             boolean withChance = true;
 
@@ -137,10 +151,10 @@ public class MaterialManager {
                 // Not a prefix.
                 Pair<TargetMaterial, Double> result = parseMaterialAndChance(parser, materialInput);
 
-                if (result.second() == null) {
-                    restMaterials.add(result.first());
+                if (result.getSecond() == null) {
+                    restMaterials.add(result.getFirst());
                 } else {
-                    valuedMaterials.put(result.first(), result.second());
+                    valuedMaterials.put(result.getFirst(), result.getSecond());
                 }
             } else {
                 // Prefixed
@@ -149,11 +163,11 @@ public class MaterialManager {
                 log.fine("Rest: '" + rest + "'");
                 Pair<TargetMaterial, Double> result = parseMaterialAndChance(parser, rest);
 
-                if (result.second() == null) {
-                    restMaterials.add(result.first());
+                if (result.getSecond() == null) {
+                    restMaterials.add(result.getFirst());
                 } else {
-                    valuedMaterials.put(result.first(), result.second());
-                    log.fine(String.format("Added material %s at chance %.2f%%", result.first(), result.second()));
+                    valuedMaterials.put(result.getFirst(), result.getSecond());
+                    log.fine(String.format("Added material %s at chance %.2f%%", result.getFirst(), result.getSecond()));
                 }
             }
         }
@@ -161,8 +175,8 @@ public class MaterialManager {
         double rest = 1.0 - valuedMaterials.values().stream().mapToDouble(e -> e).sum();
 
         if (restMaterials.size() == 1) {
-            valuedMaterials.put(restMaterials.getFirst(), rest);
-            log.fine(String.format("Added material %s at chance %.2f%%", restMaterials.getFirst(), rest));
+            valuedMaterials.put(restMaterials.get(0), rest);
+            log.fine(String.format("Added material %s at chance %.2f%%", restMaterials.get(0), rest));
         } else {
             // Split the rest of the chance between the materials.
             double chance = rest / restMaterials.size();

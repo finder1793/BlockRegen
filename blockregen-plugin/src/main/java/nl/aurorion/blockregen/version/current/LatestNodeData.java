@@ -87,37 +87,43 @@ public class LatestNodeData implements NodeData {
             }
         }
 
-        if (data instanceof Directional directional && this.facing != null) {
+        if (data instanceof Directional && this.facing != null) {
+            Directional directional = (Directional) data;
             if (directional.getFacing() != this.facing) {
                 return false;
             }
         }
 
-        if (data instanceof Stairs stairs && this.stairShape != null) {
+        if (data instanceof Stairs && this.stairShape != null) {
+            Stairs stairs = (Stairs) data;
             if (stairs.getShape() != this.stairShape) {
                 return false;
             }
         }
 
-        if (data instanceof Orientable orientable && this.axis != null) {
+        if (data instanceof Orientable && this.axis != null) {
+            Orientable orientable = (Orientable) data;
             if (orientable.getAxis() != this.axis) {
                 return false;
             }
         }
 
-        if (data instanceof Rotatable rotatable && this.rotation != null) {
+        if (data instanceof Rotatable && this.rotation != null) {
+            Rotatable rotatable = (Rotatable) data;
             if (rotatable.getRotation() != this.rotation) {
                 return false;
             }
         }
 
-        if (data instanceof Ageable ageable && this.age != null) {
+        if (data instanceof Ageable && this.age != null) {
+            Ageable ageable = (Ageable) data;
             if (ageable.getAge() != this.age) {
                 return false;
             }
         }
 
-        if (data instanceof NoteBlock noteBlock) {
+        if (data instanceof NoteBlock) {
+            NoteBlock noteBlock = (NoteBlock) data;
             if (this.octave != null && this.octave != noteBlock.getNote().getOctave()) {
                 return false;
             }
@@ -139,13 +145,15 @@ public class LatestNodeData implements NodeData {
             }
         }
 
-        if (data instanceof Powerable powerable) {
+        if (data instanceof Powerable) {
+            Powerable powerable = (Powerable) data;
             if (this.powered != null && this.powered != powerable.isPowered()) {
                 return false;
             }
         }
 
-        if (data instanceof MultipleFacing multipleFacing) {
+        if (data instanceof MultipleFacing) {
+            MultipleFacing multipleFacing = (MultipleFacing) data;
             // Has to have the exact same faces
             if (!this.faces.isEmpty() && !this.faces.equals(multipleFacing.getFaces())) {
                 return false;
@@ -163,27 +171,33 @@ public class LatestNodeData implements NodeData {
             this.skull = XSkull.of(block).getProfileString();
         }
 
-        if (data instanceof Directional directional) {
+        if (data instanceof Directional) {
+            Directional directional = (Directional) data;
             this.facing = directional.getFacing();
         }
 
-        if (data instanceof Stairs stairs) {
+        if (data instanceof Stairs) {
+            Stairs stairs = (Stairs) data;
             this.stairShape = stairs.getShape();
         }
 
-        if (data instanceof Orientable orientable) {
+        if (data instanceof Orientable) {
+            Orientable orientable = (Orientable) data;
             this.axis = orientable.getAxis();
         }
 
-        if (data instanceof Rotatable rotatable) {
+        if (data instanceof Rotatable) {
+            Rotatable rotatable = (Rotatable) data;
             this.rotation = rotatable.getRotation();
         }
 
-        if (data instanceof Ageable ageable) {
+        if (data instanceof Ageable) {
+            Ageable ageable = (Ageable) data;
             this.age = ageable.getAge();
         }
 
-        if (data instanceof NoteBlock noteBlock) {
+        if (data instanceof NoteBlock) {
+            NoteBlock noteBlock = (NoteBlock) data;
             this.instrument = noteBlock.getInstrument();
             this.octave = noteBlock.getNote().getOctave();
             this.tone = noteBlock.getNote().getTone();
@@ -191,11 +205,13 @@ public class LatestNodeData implements NodeData {
             this.noteId = noteBlock.getNote().getId();
         }
 
-        if (data instanceof Powerable powerable) {
+        if (data instanceof Powerable) {
+            Powerable powerable = (Powerable) data;
             this.powered = powerable.isPowered();
         }
 
-        if (data instanceof MultipleFacing multipleFacing) {
+        if (data instanceof MultipleFacing) {
+            MultipleFacing multipleFacing = (MultipleFacing) data;
             this.faces.clear();
             this.faces.addAll(multipleFacing.getFaces());
         }
@@ -227,7 +243,8 @@ public class LatestNodeData implements NodeData {
             ((Ageable) blockData).setAge(this.age);
         }
 
-        if (blockData instanceof NoteBlock noteBlock) {
+        if (blockData instanceof NoteBlock) {
+            NoteBlock noteBlock = (NoteBlock) blockData;
             if (this.instrument != null) {
                 noteBlock.setInstrument(this.instrument);
             }
@@ -243,13 +260,15 @@ public class LatestNodeData implements NodeData {
             }
         }
 
-        if (blockData instanceof Powerable powerable) {
+        if (blockData instanceof Powerable) {
+            Powerable powerable = (Powerable) blockData;
             if (this.powered != null) {
                 powerable.setPowered(this.powered);
             }
         }
 
-        if (blockData instanceof MultipleFacing multipleFacing) {
+        if (blockData instanceof MultipleFacing) {
+            MultipleFacing multipleFacing = (MultipleFacing) blockData;
             if (!this.faces.isEmpty()) {
                 for (BlockFace face : multipleFacing.getAllowedFaces()) {
                     multipleFacing.setFace(face, this.faces.contains(face));
