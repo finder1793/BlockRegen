@@ -151,7 +151,8 @@ public class RegenerationProcess {
             Block below = this.block.getRelative(BlockFace.DOWN);
             RegenerationProcess processBelow = plugin.getRegenerationManager().getProcess(below);
 
-            if (!below.getType().isSolid()) {
+            // Sugarcane on sugarcane (aka not solid, still can be placed)
+            if (!below.getType().isSolid() && below.getType() != block.getType()) {
                 if (processBelow != null) {
                     long delay = processBelow.getRegenerationTime() >= this.getRegenerationTime() ? processBelow.getRegenerationTime() - this.getRegenerationTime() + 100 : 1000;
 
