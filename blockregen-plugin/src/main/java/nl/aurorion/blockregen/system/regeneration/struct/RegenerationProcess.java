@@ -9,6 +9,7 @@ import nl.aurorion.blockregen.BlockRegen;
 import nl.aurorion.blockregen.api.BlockRegenBlockRegenerationEvent;
 import nl.aurorion.blockregen.system.preset.struct.BlockPreset;
 import nl.aurorion.blockregen.system.preset.struct.material.TargetMaterial;
+import nl.aurorion.blockregen.util.BlockUtil;
 import nl.aurorion.blockregen.util.LocationUtil;
 import nl.aurorion.blockregen.version.api.NodeData;
 import org.bukkit.Bukkit;
@@ -149,10 +150,12 @@ public class RegenerationProcess {
 
         if (regenerateInto.requiresSolidGround() && preset.isCheckSolidGround()) {
             Block below = this.block.getRelative(BlockFace.DOWN);
+            XMaterial belowType = plugin.getVersionManager().getMethods().getType(below);
             RegenerationProcess processBelow = plugin.getRegenerationManager().getProcess(below);
 
             // Sugarcane on sugarcane (aka not solid, still can be placed)
-            if (!below.getType().isSolid() && below.getType() != block.getType()) {
+            // + kelp on kelp
+            if (!below.getType().isSolid() && belowType != XMaterial.SUGAR_CANE && !BlockUtil.isKelp(belowType) && !BlockUtil.isSeagrass(belowType)) {
                 if (processBelow != null) {
                     long delay = processBelow.getRegenerationTime() >= this.getRegenerationTime() ? processBelow.getRegenerationTime() - this.getRegenerationTime() + 100 : 1000;
 

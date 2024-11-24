@@ -5,6 +5,7 @@ import com.bekvon.bukkit.residence.containers.Flags;
 import com.bekvon.bukkit.residence.protection.ClaimedResidence;
 import com.bekvon.bukkit.residence.protection.ResidencePermissions;
 import com.cryptomorin.xseries.XBlock;
+import com.cryptomorin.xseries.XMaterial;
 import com.palmergames.bukkit.towny.TownyAPI;
 import com.palmergames.bukkit.towny.object.TownBlock;
 import lombok.extern.java.Log;
@@ -284,8 +285,10 @@ public class BlockListener implements Listener {
         boolean regenerateWhole = preset.isRegenerateWhole();
 
         handleMultiblockAbove(block, player, above -> BlockUtil.isMultiblockCrop(plugin, above), (b) -> {
-            if (regenerateWhole) {
-                RegenerationProcess process = plugin.getRegenerationManager().createProcess(b, preset, region);
+            BlockPreset abovePreset = plugin.getPresetManager().getPreset(b);
+
+            if (regenerateWhole && abovePreset != null && abovePreset.isHandleCrops()) {
+                RegenerationProcess process = plugin.getRegenerationManager().createProcess(b, abovePreset, region);
                 process.start();
             } else {
                 // Just destroy...
@@ -307,9 +310,23 @@ public class BlockListener implements Listener {
 
     private Block findBase(Block block) {
         Block below = block.getRelative(BlockFace.DOWN);
-        if (below.getType() != block.getType()) {
+
+        XMaterial belowType = plugin.getVersionManager().getMethods().getType(below);
+        XMaterial type = plugin.getVersionManager().getMethods().getType(block);
+
+        // After kelp/kelp_plant is broken, the block below gets converted from kelp_plant to kelp
+        if (BlockUtil.isKelp(type)) {
+            if (!BlockUtil.isKelp(belowType)) {
+                return block;
+            } else {
+                return findBase(below);
+            }
+        }
+
+        if (type != belowType) {
             return block;
         }
+
         return findBase(below);
     }
 

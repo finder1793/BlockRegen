@@ -17,9 +17,20 @@ public class BlockUtil {
         return isMultiblockCrop(type);
     }
 
+    public static boolean isKelp(XMaterial material) {
+        return material == XMaterial.KELP || material == XMaterial.KELP_PLANT;
+    }
+
+    public static boolean isSeagrass(XMaterial material) {
+        return material == XMaterial.SEAGRASS || material == XMaterial.TALL_SEAGRASS;
+    }
+
     public static boolean isMultiblockCrop(XMaterial type) {
         return type == XMaterial.CACTUS ||
                 type == XMaterial.SUGAR_CANE ||
-                type == XMaterial.BAMBOO;
+                type == XMaterial.BAMBOO ||
+                type == XMaterial.KELP_PLANT ||
+                type == XMaterial.KELP ||
+                type == XMaterial.TALL_SEAGRASS;
     }
 }
