@@ -107,7 +107,7 @@ public class NodeDataDeserializer<T extends NodeData> {
 
             log.fine("Key: " + key + ", value: " + value);
 
-            PropertyDeserializer<T> deserializer = properties.get(key);
+            PropertyDeserializer<T> deserializer = properties.get(key.toLowerCase());
 
             if (deserializer == null) {
                 throw new IllegalArgumentException(String.format("Unknown node data property %s in part %s. Valid properties: '%s'.", key, dataPart, String.join("', '", this.properties.keySet())));
@@ -116,7 +116,7 @@ public class NodeDataDeserializer<T extends NodeData> {
             try {
                 deserializer.deserialize(nodeData, value);
             } catch (Exception e) {
-                throw new IllegalArgumentException(String.format("Invalid value '%s' for property %s.", value, key), e);
+                throw new IllegalArgumentException(String.format("Invalid value for property %s: %s", key, e.getMessage()), e);
             }
         }
     }
