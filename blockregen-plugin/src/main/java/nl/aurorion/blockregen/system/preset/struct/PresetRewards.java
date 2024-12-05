@@ -6,8 +6,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.java.Log;
 import nl.aurorion.blockregen.BlockRegen;
-import nl.aurorion.blockregen.system.preset.struct.drop.ItemDrop;
 import nl.aurorion.blockregen.ParseUtil;
+import nl.aurorion.blockregen.system.preset.struct.drop.ItemDrop;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Log
 @NoArgsConstructor
@@ -59,19 +60,24 @@ public class PresetRewards {
 
                 if (material != null) {
                     ItemDrop drop = ItemDrop.load(dropSection, preset);
-                    if (drop != null)
+                    if (drop != null) {
                         rewards.getDrops().add(drop);
-                } else
+                    }
+                } else {
                     log.warning("Could not load item drop at " + dropSection.getCurrentPath()
                             + ".drop-item, material is invalid.");
+                }
             } else {
                 // Multiple drops
                 for (String dropName : dropSection.getKeys(false)) {
                     ItemDrop drop = ItemDrop.load(dropSection.getConfigurationSection(dropName), preset);
-                    if (drop != null)
+                    if (drop != null) {
                         rewards.getDrops().add(drop);
+                    }
                 }
             }
+
+            log.fine("Loaded drops " + rewards.getDrops().stream().map(ItemDrop::toString).collect(Collectors.joining()));
         }
         return rewards;
     }

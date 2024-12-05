@@ -1,5 +1,6 @@
 package nl.aurorion.blockregen.util;
 
+import com.cryptomorin.xseries.XEnchantment;
 import lombok.experimental.UtilityClass;
 import nl.aurorion.blockregen.BlockRegen;
 import org.bukkit.Color;
@@ -9,6 +10,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @UtilityClass
 public class ItemUtil {
@@ -35,13 +37,16 @@ public class ItemUtil {
      * Get the quantity dropped based on the given fortune level
      */
     public int applyFortune(Material mat, ItemStack tool) {
-        if (tool.getItemMeta() == null || !tool.getItemMeta().hasEnchants() || !tool.getItemMeta().hasEnchant(Enchantment.LOOT_BONUS_BLOCKS))
+        Enchantment fortune = Objects.requireNonNull(XEnchantment.FORTUNE.getEnchant(), "Could not parse fortune enchantment into this version.");
+
+        if (tool.getItemMeta() == null || !tool.getItemMeta().hasEnchants() ||
+                !tool.getItemMeta().hasEnchant(fortune))
             return 0;
 
-        int fortune = tool.getItemMeta().getEnchantLevel(Enchantment.LOOT_BONUS_BLOCKS);
+        int fortuneLevel = tool.getItemMeta().getEnchantLevel(fortune);
 
-        if (fortune > 0) {
-            int i = BlockRegen.getInstance().getRandom().nextInt(fortune + 2) - 1;
+        if (fortuneLevel > 0) {
+            int i = BlockRegen.getInstance().getRandom().nextInt(fortuneLevel + 2) - 1;
 
             if (i < 0) i = 0;
 

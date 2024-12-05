@@ -1,5 +1,7 @@
 package nl.aurorion.blockregen.particles.impl;
 
+import com.cryptomorin.xseries.XEntity;
+import com.cryptomorin.xseries.XEntityType;
 import nl.aurorion.blockregen.BlockRegen;
 import nl.aurorion.blockregen.util.ItemUtil;
 import nl.aurorion.blockregen.particles.AbstractParticle;
@@ -32,7 +34,7 @@ public class FireWorks extends AbstractParticle {
         if (world == null) return;
 
         location.add(0.5, 0.5, 0.5);
-        Firework fw = (Firework) world.spawnEntity(location, EntityType.FIREWORK);
+        Firework fw = (Firework) world.spawnEntity(location, XEntityType.FIREWORK_ROCKET.get());
         FireworkMeta fwm = fw.getFireworkMeta();
 
         fwm.addEffect(FireworkEffect.builder()

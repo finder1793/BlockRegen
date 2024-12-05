@@ -5,10 +5,11 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.java.Log;
 import nl.aurorion.blockregen.BlockRegen;
+import nl.aurorion.blockregen.ParseUtil;
 import nl.aurorion.blockregen.StringUtil;
 import nl.aurorion.blockregen.system.preset.struct.Amount;
 import nl.aurorion.blockregen.system.preset.struct.BlockPreset;
-import nl.aurorion.blockregen.ParseUtil;
+import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
@@ -52,11 +53,12 @@ public class ItemDrop {
 
     @Setter
     private Integer customModelData;
+    @Setter
+    private NamespacedKey itemModel;
 
     public ItemDrop(XMaterial material) {
         this.material = material;
     }
-
 
     /**
      * Compose this Drop into an item stack.
@@ -122,6 +124,10 @@ public class ItemDrop {
             }
         }
 
+        if (itemModel != null) {
+            itemMeta.setItemModel(itemModel);
+        }
+
         itemStack.setItemMeta(itemMeta);
 
         return itemStack;
@@ -160,6 +166,28 @@ public class ItemDrop {
 
         drop.setCustomModelData(ParseUtil.parseInteger(section.getString("custom-model-data")));
 
+        if (section.isSet("item-model")) {
+            String key = section.getString("item-model");
+            drop.setItemModel(NamespacedKey.fromString(Objects.requireNonNull(key)));
+        }
+
         return drop;
+    }
+
+    @Override
+    public String toString() {
+        return "ItemDrop{" +
+                "material=" + material +
+                ", amount=" + amount +
+                ", displayName='" + displayName + '\'' +
+                ", lore=" + lore +
+                ", enchants=" + enchants +
+                ", itemFlags=" + itemFlags +
+                ", dropNaturally=" + dropNaturally +
+                ", experienceDrop=" + experienceDrop +
+                ", chance=" + chance +
+                ", customModelData=" + customModelData +
+                ", itemModel=" + itemModel +
+                '}';
     }
 }
