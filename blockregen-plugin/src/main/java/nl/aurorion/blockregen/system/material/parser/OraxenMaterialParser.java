@@ -4,6 +4,7 @@ import io.th0rgal.oraxen.api.OraxenBlocks;
 import nl.aurorion.blockregen.BlockRegen;
 import nl.aurorion.blockregen.system.preset.struct.material.OraxenMaterial;
 import nl.aurorion.blockregen.system.preset.struct.material.TargetMaterial;
+import org.jetbrains.annotations.NotNull;
 
 public class OraxenMaterialParser implements MaterialParser {
 
@@ -14,9 +15,9 @@ public class OraxenMaterialParser implements MaterialParser {
     }
 
     @Override
-    public TargetMaterial parseMaterial(String input) throws IllegalArgumentException {
+    public @NotNull TargetMaterial parseMaterial(String input) throws IllegalArgumentException {
         if (!OraxenBlocks.isOraxenBlock(input)) {
-            throw new IllegalArgumentException(input + " is not an Oraxen block");
+            throw new IllegalArgumentException(String.format("'%s' is not an Oraxen block.", input));
         }
 
         return new OraxenMaterial(this.plugin, input);

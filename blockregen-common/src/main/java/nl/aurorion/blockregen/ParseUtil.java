@@ -99,8 +99,9 @@ public class ParseUtil {
 
     public <E extends Enum<E>> E parseEnum(String str, Class<E> clazz, Consumer<Throwable> exceptionCallback) {
 
-        if (Strings.isNullOrEmpty(str))
+        if (Strings.isNullOrEmpty(str)) {
             return null;
+        }
 
         try {
             return E.valueOf(clazz, str.trim().toUpperCase());

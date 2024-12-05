@@ -1,9 +1,8 @@
 package nl.aurorion.blockregen.system.material;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.extern.java.Log;
 import nl.aurorion.blockregen.BlockRegen;
+import nl.aurorion.blockregen.Pair;
 import nl.aurorion.blockregen.system.material.parser.MaterialParser;
 import nl.aurorion.blockregen.system.preset.struct.material.DynamicMaterial;
 import nl.aurorion.blockregen.system.preset.struct.material.TargetMaterial;
@@ -41,18 +40,13 @@ public class MaterialManager {
         log.fine(String.format("Registered material parser with prefix %s", prefix));
     }
 
+    @Nullable
     public MaterialParser getParser(@Nullable String prefix) {
         return this.registeredParsers.get((prefix == null ? null : prefix.toLowerCase()));
     }
 
-    @Data
-    @AllArgsConstructor
-    public static class Pair<F, S> {
-        private final F first;
-        private final S second;
-    }
-
-    private Pair<TargetMaterial, Double> parseMaterialAndChance(MaterialParser parser, String input) {
+    @NotNull
+    private Pair<TargetMaterial, Double> parseMaterialAndChance(MaterialParser parser, String input) throws IllegalArgumentException {
         // The part until the last colon that's not part of 'https://'
         Matcher matcher = Pattern.compile("(?<!http(?s)):(?!//)").matcher(input);
 
@@ -106,7 +100,8 @@ public class MaterialManager {
         }
     }
 
-    public DynamicMaterial parseDynamicMaterial(String input) {
+    @NotNull
+    public DynamicMaterial parseDynamicMaterial(String input) throws IllegalArgumentException {
         List<String> materials = Arrays.asList(input.split(";"));
 
         // Materials without a chance.
@@ -142,8 +137,7 @@ public class MaterialManager {
                 parser = getParser(null);
 
                 if (parser == null) {
-                    log.warning(String.format("No valid parser found for material input %s", input));
-                    return null;
+                    throw new IllegalArgumentException(String.format("Material '%s' is invalid. No valid material parser found.", input));
                 }
 
                 log.fine("No prefix");
@@ -193,7 +187,8 @@ public class MaterialManager {
      * @return Parsed material or null when no parser was found.
      * @throws IllegalArgumentException When the parser is unable to parse the material.
      */
-    public @Nullable TargetMaterial parseMaterial(@NotNull String input) throws IllegalArgumentException {
+    @NotNull
+    public TargetMaterial parseMaterial(@NotNull String input) throws IllegalArgumentException {
 
         // Separate parts
         String[] parts = new String[]{input};
@@ -214,8 +209,7 @@ public class MaterialManager {
             parser = getParser(null);
 
             if (parser == null) {
-                log.fine(String.format("No valid parser found for material input %s", input));
-                return null;
+                throw new IllegalArgumentException(String.format("Material '%s' invalid. No valid parser found", input));
             }
         } else {
             // remove parts[0] aka the parser prefix

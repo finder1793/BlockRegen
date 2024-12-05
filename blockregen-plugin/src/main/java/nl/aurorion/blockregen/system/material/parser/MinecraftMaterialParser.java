@@ -3,10 +3,11 @@ package nl.aurorion.blockregen.system.material.parser;
 import com.cryptomorin.xseries.XMaterial;
 import lombok.extern.java.Log;
 import nl.aurorion.blockregen.BlockRegen;
+import nl.aurorion.blockregen.ParseUtil;
 import nl.aurorion.blockregen.system.preset.struct.material.MinecraftMaterial;
 import nl.aurorion.blockregen.system.preset.struct.material.TargetMaterial;
-import nl.aurorion.blockregen.ParseUtil;
 import nl.aurorion.blockregen.version.api.NodeData;
+import org.jetbrains.annotations.NotNull;
 
 @Log
 public class MinecraftMaterialParser implements MaterialParser {
@@ -18,7 +19,7 @@ public class MinecraftMaterialParser implements MaterialParser {
     }
 
     @Override
-    public TargetMaterial parseMaterial(String input) throws IllegalArgumentException {
+    public @NotNull TargetMaterial parseMaterial(String input) throws IllegalArgumentException {
         log.fine(String.format("Parsing MC material from %s", input));
 
         boolean loadData = false;
@@ -33,7 +34,7 @@ public class MinecraftMaterialParser implements MaterialParser {
         XMaterial xMaterial = ParseUtil.parseMaterial(materialPart, plugin.getVersionManager().isCurrentAbove("1.12.2", false));
 
         if (xMaterial == null) {
-            throw new IllegalArgumentException("Could not parse minecraft material: " + materialPart);
+            throw new IllegalArgumentException("Could not parse minecraft material '" + materialPart + "'.");
         }
 
         if (loadData) {

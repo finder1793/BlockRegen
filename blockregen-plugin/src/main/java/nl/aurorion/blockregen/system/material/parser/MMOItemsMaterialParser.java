@@ -3,8 +3,9 @@ package nl.aurorion.blockregen.system.material.parser;
 import nl.aurorion.blockregen.BlockRegen;
 import nl.aurorion.blockregen.system.preset.struct.material.MMOIItemsMaterial;
 import nl.aurorion.blockregen.system.preset.struct.material.TargetMaterial;
+import org.jetbrains.annotations.NotNull;
 
-public class MMOItemsMaterialParser implements MaterialParser{
+public class MMOItemsMaterialParser implements MaterialParser {
 
     private final BlockRegen plugin;
 
@@ -13,14 +14,12 @@ public class MMOItemsMaterialParser implements MaterialParser{
     }
 
     @Override
-    public TargetMaterial parseMaterial(String input) throws IllegalArgumentException {
-        int id;
+    public @NotNull TargetMaterial parseMaterial(String input) throws IllegalArgumentException {
         try {
-            id = Integer.parseInt(input);
+            int id = Integer.parseInt(input);
+            return new MMOIItemsMaterial(plugin, id);
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid MMOItem block id: " + input);
+            throw new IllegalArgumentException(String.format("Invalid MMOItem block id: '%s'.", input));
         }
-
-        return new MMOIItemsMaterial(plugin, id);
     }
 }

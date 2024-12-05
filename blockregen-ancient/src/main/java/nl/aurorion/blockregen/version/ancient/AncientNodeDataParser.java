@@ -10,25 +10,10 @@ import org.bukkit.block.BlockFace;
 public class AncientNodeDataParser implements NodeDataParser {
 
     private final NodeDataDeserializer<AncientNodeData> nodeDataDeserializer = new NodeDataDeserializer<AncientNodeData>()
-            .property("age", (nodeData, value) -> {
-                int age = Integer.parseInt(value);
-                CropState state = CropState.values()[age];
-                nodeData.setCropState(state);
-            })
-            .property("facing", (nodeData, value) -> {
-                int id = Integer.parseInt(value);
-                BlockFace facing = BlockFace.values()[id];
-                nodeData.setFacing(facing);
-            })
-            .property("species", (nodeData, value) -> {
-                int id = Integer.parseInt(value);
-                TreeSpecies species = TreeSpecies.values()[id];
-                nodeData.setTreeSpecies(species);
-            })
-            .property("inverted", (nodeData, value) -> {
-                boolean inverted = Boolean.parseBoolean(value);
-                nodeData.setInverted(inverted);
-            })
+            .property("age", (nodeData, value) -> NodeDataDeserializer.tryParseEnum(value, CropState.class))
+            .property("facing", (nodeData, value) -> NodeDataDeserializer.tryParseEnum(value, BlockFace.class))
+            .property("species", (nodeData, value) -> NodeDataDeserializer.tryParseEnum(value, TreeSpecies.class))
+            .property("inverted", (nodeData, value) -> nodeData.setInverted(Boolean.parseBoolean(value)))
             .property("skull", AncientNodeData::setSkull);
 
     @Override

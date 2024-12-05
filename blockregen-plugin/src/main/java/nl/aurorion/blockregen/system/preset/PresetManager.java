@@ -100,10 +100,6 @@ public class PresetManager {
         TargetMaterial targetMaterial;
         try {
             targetMaterial = this.plugin.getMaterialManager().parseMaterial(targetMaterialInput);
-            if (targetMaterial == null) {
-                log.warning(String.format("Could not load preset %s, invalid target material %s.", name, targetMaterialInput));
-                return;
-            }
             preset.setTargetMaterial(targetMaterial);
         } catch (IllegalArgumentException e) {
             log.warning(String.format("Could not load preset %s: %s", name, e.getMessage()));
