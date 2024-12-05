@@ -22,6 +22,13 @@ public interface TargetMaterial {
         return false;
     }
 
+    /**
+     * Whether this material requires farmland.
+     */
+    default boolean requiresFarmland() {
+        return false;
+    }
+
     default void applyData(Block block) {
         //
     }

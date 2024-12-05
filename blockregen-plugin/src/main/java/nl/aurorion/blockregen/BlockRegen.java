@@ -9,7 +9,7 @@ import me.ryanhamshire.GriefPrevention.GriefPrevention;
 import net.milkbowl.vault.economy.Economy;
 import nl.aurorion.blockregen.commands.Commands;
 import nl.aurorion.blockregen.configuration.Files;
-import nl.aurorion.blockregen.listeners.BlockListener;
+import nl.aurorion.blockregen.listeners.RegenerationListener;
 import nl.aurorion.blockregen.listeners.PlayerListener;
 import nl.aurorion.blockregen.particles.ParticleManager;
 import nl.aurorion.blockregen.particles.impl.FireWorks;
@@ -285,7 +285,7 @@ public class BlockRegen extends JavaPlugin implements Listener {
 
     private void registerListeners() {
         PluginManager pluginManager = this.getServer().getPluginManager();
-        pluginManager.registerEvents(new BlockListener(this), this);
+        pluginManager.registerEvents(new RegenerationListener(this), this);
         pluginManager.registerEvents(new PlayerListener(this), this);
     }
 

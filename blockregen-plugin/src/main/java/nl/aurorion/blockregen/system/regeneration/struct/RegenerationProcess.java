@@ -1,5 +1,6 @@
 package nl.aurorion.blockregen.system.regeneration.struct;
 
+import com.cryptomorin.xseries.XBlock;
 import com.cryptomorin.xseries.XMaterial;
 import lombok.Data;
 import lombok.Getter;
@@ -208,6 +209,16 @@ public class RegenerationProcess {
             return;
         }
 
+        // -- Regenerate farmland under crops
+        if (regenerateInto.requiresFarmland()) {
+            Block under = block.getRelative(BlockFace.DOWN);
+            XMaterial underType = BlockRegen.getInstance().getVersionManager().getMethods().getType(under);
+
+            if (underType != XMaterial.FARMLAND) {
+                under.setType(Objects.requireNonNull(XMaterial.FARMLAND.parseMaterial()));
+            }
+        }
+
         regenerateInto.place(block);
         originalData.place(block); // Apply original data
         regenerateInto.applyData(block); // Override with configured data if any
@@ -229,6 +240,15 @@ public class RegenerationProcess {
         Material material = originalMaterial.parseMaterial();
 
         if (material != null) {
+            // -- Place farmland under crops
+            if (XBlock.isCrop(originalMaterial)) {
+                Block under = block.getRelative(BlockFace.DOWN);
+                XMaterial underType = BlockRegen.getInstance().getVersionManager().getMethods().getType(under);
+                if (underType != XMaterial.FARMLAND) {
+                    under.setType(Objects.requireNonNull(XMaterial.FARMLAND.parseMaterial()));
+                }
+            }
+
             block.setType(material);
             originalData.place(this.block);
             log.fine(String.format("Reverted block for %s", this));
@@ -237,13 +257,24 @@ public class RegenerationProcess {
 
     // Has to be synchronized to run on the next tick. Otherwise, the block does not get replaced.
     public void replaceBlock() {
-        if (getReplaceMaterial() == null) {
+        TargetMaterial replaceMaterial = getReplaceMaterial();
+
+        if (replaceMaterial == null) {
             return;
         }
 
-        this.getReplaceMaterial().place(block);
+        // -- Place farmland under crops
+        if (replaceMaterial.requiresFarmland()) {
+            Block under = block.getRelative(BlockFace.DOWN);
+            XMaterial underType = BlockRegen.getInstance().getVersionManager().getMethods().getType(under);
+            if (underType != XMaterial.FARMLAND) {
+                under.setType(Objects.requireNonNull(XMaterial.FARMLAND.parseMaterial()));
+            }
+        }
+
+        this.replaceMaterial.place(block);
         this.originalData.place(block); // Apply original data
-        getReplaceMaterial().applyData(block); // Apply configured data if any
+        replaceMaterial.applyData(block); // Apply configured data if any
 
         // Otherwise skull textures wouldn't update.
         Bukkit.getScheduler().runTaskLater(BlockRegen.getInstance(), () -> block.getState().update(true), 1L);

@@ -57,6 +57,11 @@ public class MinecraftMaterial implements TargetMaterial {
     }
 
     @Override
+    public boolean requiresFarmland() {
+        return XBlock.isCrop(this.material);
+    }
+
+    @Override
     public String toString() {
         return "MinecraftMaterial{" +
                 "material=" + material +
