@@ -37,7 +37,7 @@ public class MaterialManager {
      */
     public void registerParser(@Nullable String prefix, @NotNull MaterialParser parser) {
         registeredParsers.put((prefix == null ? null : prefix.toLowerCase()), parser);
-        log.fine(String.format("Registered material parser with prefix %s", prefix));
+        log.fine(() -> String.format("Registered material parser with prefix %s", prefix));
     }
 
     @Nullable
@@ -50,7 +50,7 @@ public class MaterialManager {
         // The part until the last colon that's not part of 'https://'
         Matcher matcher = Pattern.compile("(?<!http(?s)):(?!//)").matcher(input);
 
-        log.fine("Input for parseMaterialAndChance: '" + input + "'");
+        log.fine(() -> "Input for parseMaterialAndChance: '" + input + "'");
 
         // <namespace>:<id>
         // <namespace>:<id>:<chance>
@@ -65,7 +65,7 @@ public class MaterialManager {
 
         long count = results.size();
 
-        log.fine(String.join(",", results.stream().map(MatchResult::group).collect(Collectors.joining(","))) + " " + count);
+        log.fine(() -> String.join(",", results.stream().map(MatchResult::group).collect(Collectors.joining(","))) + " " + count);
 
         if (count != 0) {
             int lastColon = results.get(results.size() - 1).end();
@@ -77,13 +77,12 @@ public class MaterialManager {
                 rawMaterialInput = input;
                 withChance = false;
             }
-            log.fine("Raw material input: '" + rawMaterialInput + "'");
 
             TargetMaterial material = parser.parseMaterial(rawMaterialInput);
 
             if (withChance) {
                 String rawChanceInput = input.substring(lastColon);
-                log.fine("Raw chance input: '" + rawChanceInput + "'");
+                log.fine(() -> "Raw chance input: '" + rawChanceInput + "'");
                 try {
                     double chance = Double.parseDouble(rawChanceInput);
                     return new Pair<>(material, chance / 100);
@@ -94,7 +93,7 @@ public class MaterialManager {
                 return new Pair<>(material, null);
             }
         } else {
-            log.fine("Single material input for parseMaterialAndChance: '" + input + "'");
+            log.fine(() -> "Single material input for parseMaterialAndChance: '" + input + "'");
             TargetMaterial material = parser.parseMaterial(input);
             return new Pair<>(material, null);
         }
@@ -140,7 +139,7 @@ public class MaterialManager {
                     throw new IllegalArgumentException(String.format("Material '%s' is invalid. No valid material parser found.", input));
                 }
 
-                log.fine("No prefix");
+                log.fine(() -> "No prefix");
 
                 // Not a prefix.
                 Pair<TargetMaterial, Double> result = parseMaterialAndChance(parser, materialInput);
@@ -153,15 +152,15 @@ public class MaterialManager {
             } else {
                 // Prefixed
                 String rest = materialInput.substring(firstColon + 1);
-                log.fine("Prefix: '" + prefix + "'");
-                log.fine("Rest: '" + rest + "'");
+                log.fine(() -> "Prefix: '" + prefix + "'");
+                log.fine(() -> "Rest: '" + rest + "'");
                 Pair<TargetMaterial, Double> result = parseMaterialAndChance(parser, rest);
 
                 if (result.getSecond() == null) {
                     restMaterials.add(result.getFirst());
                 } else {
                     valuedMaterials.put(result.getFirst(), result.getSecond());
-                    log.fine(String.format("Added material %s at chance %.2f%%", result.getFirst(), result.getSecond()));
+                    log.fine(() -> String.format("Added material %s at chance %.2f%%", result.getFirst(), result.getSecond()));
                 }
             }
         }
@@ -170,7 +169,7 @@ public class MaterialManager {
 
         if (restMaterials.size() == 1) {
             valuedMaterials.put(restMaterials.get(0), rest);
-            log.fine(String.format("Added material %s at chance %.2f%%", restMaterials.get(0), rest));
+            log.fine(() -> String.format("Added material %s at chance %.2f%%", restMaterials.get(0), rest));
         } else {
             // Split the rest of the chance between the materials.
             double chance = rest / restMaterials.size();

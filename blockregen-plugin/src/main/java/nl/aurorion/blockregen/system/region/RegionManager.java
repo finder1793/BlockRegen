@@ -146,7 +146,7 @@ public class RegionManager {
             world.addPreset(presetName);
         }
 
-        log.fine(String.format("Loaded regeneration world %s", world));
+        log.fine(() -> String.format("Loaded regeneration world %s", world));
         this.loadedAreas.add(world);
     }
 
@@ -208,7 +208,7 @@ public class RegionManager {
 
         this.loadedAreas.add(region);
         this.sort();
-        log.fine("Loaded region " + region);
+        log.fine(() -> "Loaded region " + region);
         return true;
     }
 
@@ -259,7 +259,7 @@ public class RegionManager {
 
         plugin.getFiles().getRegions().save();
 
-        log.fine("Saved " + (this.loadedAreas.size() + this.failedRegions.size()) + " area(s)...");
+        log.fine(() -> "Saved " + (this.loadedAreas.size() + this.failedRegions.size()) + " area(s)...");
     }
 
     private ConfigurationSection ensureRegionsSection(FileConfiguration configuration) {
@@ -291,7 +291,7 @@ public class RegionManager {
     public RegenerationArea getArea(@NotNull Block block) {
         for (RegenerationArea area : this.loadedAreas) {
             if (area.contains(block)) {
-                log.fine(String.format("Found area: %s", area));
+                log.fine(() -> String.format("Found area: %s", area));
                 return area;
             }
         }
@@ -301,7 +301,7 @@ public class RegionManager {
     public void addArea(@NotNull RegenerationArea region) {
         this.loadedAreas.add(region);
         this.sort();
-        log.fine("Added area " + region);
+        log.fine(() -> "Added area " + region);
         save();
     }
 

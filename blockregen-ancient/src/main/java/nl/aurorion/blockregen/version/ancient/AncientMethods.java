@@ -49,14 +49,14 @@ public class AncientMethods implements Methods {
         } else {
             // Ignore data
             dataValue = data.getData();
-            log.fine(String.format("Ignoring material data: %s:%d", state.getType(), dataValue));
+            log.fine(() -> String.format("Ignoring material data: %s:%d", state.getType(), dataValue));
 
             return XMaterial.matchXMaterial(state.getType());
         }
 
         XMaterial xMaterial = XMaterial.matchXMaterial(String.format("%s:%d", block.getType().toString(), dataValue)).orElse(null);
 
-        log.fine(String.format("Parsed material %s:%d into %s", state.getType(), dataValue, xMaterial));
+        log.fine(() -> String.format("Parsed material %s:%d into %s", state.getType(), dataValue, xMaterial));
 
         return xMaterial;
     }

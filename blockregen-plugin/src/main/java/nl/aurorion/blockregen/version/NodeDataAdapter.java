@@ -20,7 +20,7 @@ public class NodeDataAdapter<T extends NodeData> implements JsonDeserializer<T>,
         final String className = prim.getAsString();
         final Class<T> clazz = getClassInstance(className);
 
-        log.fine(String.format("Deserializing %s (%s) into %s", jsonElement, type, clazz.getName()));
+        log.fine(() -> String.format("Deserializing %s (%s) into %s", jsonElement, type, clazz.getName()));
 
         return simpleGson.fromJson(jsonElement, clazz);
     }
@@ -32,7 +32,7 @@ public class NodeDataAdapter<T extends NodeData> implements JsonDeserializer<T>,
         // Add className to properly deserialize correctly later.
         element.getAsJsonObject().addProperty("className", t.getClass().getName());
 
-        log.fine(String.format("Serializing %s (%s) into %s", t, type, element));
+        log.fine(() -> String.format("Serializing %s (%s) into %s", t, type, element));
         return element;
     }
 

@@ -127,7 +127,7 @@ public class LegacyNodeData implements NodeData {
             this.treeSpecies = wood.getSpecies();
         }
 
-        log.fine(String.format("Loaded block data %s (%s)", block.getType(), this));
+        log.fine(() -> String.format("Loaded block data %s (%s)", block.getType(), this));
     }
 
     @Override

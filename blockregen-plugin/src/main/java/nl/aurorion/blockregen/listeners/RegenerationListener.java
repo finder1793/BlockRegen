@@ -35,6 +35,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -54,6 +55,36 @@ public class RegenerationListener implements Listener {
 
     public RegenerationListener(BlockRegen plugin) {
         this.plugin = plugin;
+    }
+
+    @EventHandler
+    public void onPhysics(BlockPhysicsEvent event) {
+        if (plugin.getConfig().isSet("Disable-Physics") && !plugin.getConfig().getBoolean("Disable-Physics", false)) {
+            return;
+        }
+
+        Block block = event.getBlock();
+        World world = block.getWorld();
+
+        boolean useRegions = plugin.getConfig().getBoolean("Use-Regions", false);
+        RegenerationArea region = plugin.getRegionManager().getArea(block);
+
+        boolean isInWorld = plugin.getConfig().getStringList("Worlds-Enabled").contains(world.getName());
+        boolean isInRegion = region != null;
+
+        boolean isInZone = useRegions ? isInRegion : isInWorld;
+
+        if (!isInZone) {
+            return;
+        }
+
+        // Only deny physics if the update is caused by a regenerating block.
+        RegenerationProcess process = plugin.getRegenerationManager().getProcess(event.getSourceBlock());
+        if (process == null || !process.getPreset().isDisablePhysics()) {
+            return;
+        }
+        event.setCancelled(true);
+        log.fine(() -> event.getChangedType() + " " + BlockUtil.blockToString(event.getBlock()));
     }
 
     // Block trampling
@@ -96,12 +127,12 @@ public class RegenerationListener implements Listener {
             // Remove the process
             if (hasBypass(player)) {
                 plugin.getRegenerationManager().removeProcess(existingProcess);
-                log.fine("Removed process in bypass.");
+                log.fine(() -> "Removed process in bypass.");
                 return;
             }
 
             if (existingProcess.getRegenerationTime() > System.currentTimeMillis()) {
-                log.fine(String.format("Block is regenerating. Process: %s", existingProcess));
+                log.fine(() -> String.format("Block is regenerating. Process: %s", existingProcess));
                 event.setCancelled(true);
                 return;
             }
@@ -109,14 +140,14 @@ public class RegenerationListener implements Listener {
 
         // Check bypass
         if (hasBypass(player)) {
-            log.fine("Player has bypass.");
+            log.fine(() -> "Player has bypass.");
             return;
         }
 
         // Block data check
         if (plugin.getRegenerationManager().hasDataCheck(player)) {
             event.setCancelled(true);
-            log.fine("Player has block check.");
+            log.fine(() -> "Player has block check.");
             return;
         }
 
@@ -139,7 +170,7 @@ public class RegenerationListener implements Listener {
             return;
         }
 
-        log.fine(String.format("Handling %s.", LocationUtil.locationToString(block.getLocation())));
+        log.fine(() -> String.format("Handling %s.", LocationUtil.locationToString(block.getLocation())));
 
         BlockPreset preset = plugin.getPresetManager().getPreset(block);
 
@@ -147,16 +178,16 @@ public class RegenerationListener implements Listener {
 
         if (!isConfigured) {
             if (useRegions && preset != null && !region.hasPreset(preset.getName())) {
-                log.fine(String.format("Region %s does not have preset %s configured.", region.getName(), preset.getName()));
+                log.fine(() -> String.format("Region %s does not have preset %s configured.", region.getName(), preset.getName()));
             }
 
             if (plugin.getConfig().getBoolean("Disable-Other-Break")) {
                 event.setCancelled(true);
-                log.fine(String.format("%s is not a configured preset. Denied block break.", block.getType()));
+                log.fine(() -> String.format("%s is not a configured preset. Denied block break.", block.getType()));
                 return;
             }
 
-            log.fine(String.format("%s is not a configured preset.", block.getType()));
+            log.fine(() -> String.format("%s is not a configured preset.", block.getType()));
             return;
         }
 
@@ -164,7 +195,7 @@ public class RegenerationListener implements Listener {
         if (isInRegion && lacksPermission(player, "blockregen.region", region.getName()) && !player.isOp()) {
             event.setCancelled(true);
             Message.PERMISSION_REGION_ERROR.send(player);
-            log.fine(String.format("Player doesn't have permissions for region %s", region.getName()));
+            log.fine(() -> String.format("Player doesn't have permissions for region %s", region.getName()));
             return;
         }
 
@@ -173,7 +204,7 @@ public class RegenerationListener implements Listener {
         if (lacksPermission(player, "blockregen.block", block.getType().toString()) && !player.isOp()) {
             Message.PERMISSION_BLOCK_ERROR.send(player);
             event.setCancelled(true);
-            log.fine(String.format("Player doesn't have permission for block %s.", block.getType()));
+            log.fine(() -> String.format("Player doesn't have permission for block %s.", block.getType()));
             return;
         }
 
@@ -181,14 +212,14 @@ public class RegenerationListener implements Listener {
         if (lacksPermission(player, "blockregen.preset", preset.getName()) && !player.isOp()) {
             Message.PERMISSION_BLOCK_ERROR.send(player);
             event.setCancelled(true);
-            log.fine(String.format("Player doesn't have permission for preset %s.", preset.getName()));
+            log.fine(() -> String.format("Player doesn't have permission for preset %s.", preset.getName()));
             return;
         }
 
         // Check conditions
         if (!preset.getConditions().check(player)) {
             event.setCancelled(true);
-            log.fine("Player doesn't meet conditions.");
+            log.fine(() -> "Player doesn't meet conditions.");
             return;
         }
 
@@ -201,14 +232,14 @@ public class RegenerationListener implements Listener {
             Bukkit.getServer().getPluginManager().callEvent(blockRegenBlockBreakEvent);
 
             if (blockRegenBlockBreakEvent.isCancelled()) {
-                log.fine("BlockRegenBreakEvent got cancelled.");
+                log.fine(() -> "BlockRegenBreakEvent got cancelled.");
                 return;
             }
         }
 
         Block above = block.getRelative(BlockFace.UP);
 
-        log.fine("Above: " + above.getType());
+        log.fine(() -> "Above: " + above.getType());
 
         // Multiblock vegetation - sugarcane, cacti, bamboo
         // Handle those blocks as well (cancel drops, rewards, etc.), but don't start regeneration processes for those.
@@ -221,10 +252,12 @@ public class RegenerationListener implements Listener {
         // Crop possibly above this block.
         BlockPreset abovePreset = plugin.getPresetManager().getPreset(above);
         if (abovePreset != null && abovePreset.isHandleCrops()) {
+            XMaterial aboveType = plugin.getVersionManager().getMethods().getType(above);
+
             if (BlockUtil.isMultiblockCrop(plugin, above)) {
                 // Multiblock crops (cactus, sugarcane,...)
                 handleMultiblockCrop(above, player, abovePreset, isInRegion ? region.getName() : null);
-            } else if (XBlock.isCrop(plugin.getVersionManager().getMethods().getType(above))) {
+            } else if (XBlock.isCrop(aboveType) || BlockUtil.reliesOnBlockBelow(aboveType)) {
                 // Single crops (wheat, carrots,...)
                 List<ItemStack> vanillaDrops = new ArrayList<>(block.getDrops(plugin.getVersionManager().getMethods().getItemInMainHand(player)));
 
@@ -232,7 +265,7 @@ public class RegenerationListener implements Listener {
                 process.start();
 
                 // Note: none of the blocks seem to drop experience when broken, should be safe to assume 0
-                log.fine("Handling crop above...");
+                log.fine(() -> "Handling block above...");
                 handleRewards(above.getState(), abovePreset, player, vanillaDrops, 0);
             }
         }
@@ -245,7 +278,7 @@ public class RegenerationListener implements Listener {
             // We're dropping the items ourselves.
             if (plugin.getVersionManager().isCurrentAbove("1.8", false)) {
                 blockBreakEvent.setDropItems(false);
-                log.fine("Cancelled BlockDropItemEvent");
+                log.fine(() -> "Cancelled BlockDropItemEvent");
             }
             blockBreakEvent.setExpToDrop(0);
         }
@@ -264,7 +297,7 @@ public class RegenerationListener implements Listener {
             TownBlock townBlock = TownyAPI.getInstance().getTownBlock(block.getLocation());
 
             if (townBlock != null && townBlock.hasTown()) {
-                log.fine("Let Towny handle this.");
+                log.fine(() -> "Let Towny handle this.");
                 return true;
             }
         }
@@ -274,7 +307,7 @@ public class RegenerationListener implements Listener {
             String noBuildReason = plugin.getGriefPrevention().allowBreak(player, block, block.getLocation(), null);
 
             if (noBuildReason != null) {
-                log.fine("Let GriefPrevention handle this.");
+                log.fine(() -> "Let GriefPrevention handle this.");
                 return true;
             }
         }
@@ -284,7 +317,7 @@ public class RegenerationListener implements Listener {
                 && plugin.getVersionManager().getWorldGuardProvider() != null) {
 
             if (!plugin.getVersionManager().getWorldGuardProvider().canBreak(player, block.getLocation())) {
-                log.fine("Let WorldGuard handle this.");
+                log.fine(() -> "Let WorldGuard handle this.");
                 return true;
             }
         }
@@ -299,7 +332,7 @@ public class RegenerationListener implements Listener {
                 // has neither build nor destroy
                 // let residence run its protection
                 if (!permissions.playerHas(player, Flags.destroy, true) && !permissions.playerHas(player, Flags.build, true)) {
-                    log.fine("Let Residence handle this.");
+                    log.fine(() -> "Let Residence handle this.");
                     return true;
                 }
             }
@@ -348,7 +381,7 @@ public class RegenerationListener implements Listener {
 
         Block base = findBase(block);
 
-        log.fine("Base " + BlockUtil.blockToString(base));
+        log.fine(() -> "Base " + BlockUtil.blockToString(base));
 
         // Only start regeneration when the most bottom block is broken.
         RegenerationProcess process = null;
@@ -532,7 +565,7 @@ public class RegenerationListener implements Listener {
 
         Bukkit.getScheduler().runTask(plugin,
                 () -> location.getWorld().spawn(location, ExperienceOrb.class).setExperience(amount));
-        log.fine(String.format("Spawning xp (%d).", amount));
+        log.fine(() -> String.format("Spawning xp (%d).", amount));
     }
 
     private void giveExp(Location location, Player player, int amount, boolean naturally) {
@@ -557,10 +590,10 @@ public class RegenerationListener implements Listener {
 
                 if (entry.getValue()) {
                     items.add(blockState.getWorld().dropItemNaturally(blockState.getLocation(), item));
-                    log.fine("Dropping item " + item.getType() + "x" + item.getAmount());
+                    log.fine(() -> "Dropping item " + item.getType() + "x" + item.getAmount());
                 } else {
                     player.getInventory().addItem(item);
-                    log.fine("Giving item " + item.getType() + "x" + item.getAmount());
+                    log.fine(() -> "Giving item " + item.getType() + "x" + item.getAmount());
                 }
             }
 

@@ -62,7 +62,7 @@ public class EventManager {
             return;
 
         event.setEnabled(false);
-        log.fine("Disabled event " + event.getName());
+        log.fine(() -> "Disabled event " + event.getName());
 
         if (plugin.getVersionManager().isCurrentBelow("1.8", true))
             return;
@@ -93,7 +93,7 @@ public class EventManager {
             return;
 
         event.setEnabled(true);
-        log.fine("Enabled event " + event.getName());
+        log.fine(() -> "Enabled event " + event.getName());
 
         if (plugin.getVersionManager().isCurrentBelow("1.8", true) || event.getBossBar() == null)
             return;
@@ -117,7 +117,7 @@ public class EventManager {
 
     public void addEvent(PresetEvent event) {
         this.loadedEvents.put(event.getName(), event);
-        log.fine("Added event " + event.getName());
+        log.fine(() -> "Added event " + event.getName());
     }
 
     public boolean isEnabled(String name) {

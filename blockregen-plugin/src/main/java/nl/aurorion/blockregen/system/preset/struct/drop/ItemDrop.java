@@ -75,7 +75,7 @@ public class ItemDrop {
             double roll = BlockRegen.getInstance().getRandom().nextDouble() * 100;
 
             if (roll > threshold) {
-                log.fine(String.format("Drop %s failed chance roll, %.2f > %.2f", this, roll, threshold));
+                log.fine(() -> String.format("Drop %s failed chance roll, %.2f > %.2f", this, roll, threshold));
                 return null;
             }
         }
@@ -120,7 +120,7 @@ public class ItemDrop {
             // Add PDC with custom model data
             if (customModelData != null) {
                 itemMeta.setCustomModelData(customModelData);
-                log.fine(String.format("Setting custom model data of %d", customModelData));
+                log.fine(() -> String.format("Setting custom model data of %d", customModelData));
             }
         }
 

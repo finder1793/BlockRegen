@@ -73,7 +73,7 @@ public class NodeDataDeserializer<T extends NodeData> {
      * @throws IllegalArgumentException If the input format is malformed in any way.
      */
     public void deserialize(@NotNull T nodeData, @NotNull String input) throws IllegalArgumentException {
-        log.fine("Deserializing " + input);
+        log.fine(() -> "Deserializing " + input);
 
         if (propertyEqualsPattern == null) {
             this.propertyEqualsPattern = generatePropertyEqualsPattern();
@@ -92,7 +92,7 @@ public class NodeDataDeserializer<T extends NodeData> {
 
         for (String dataPart : dataParts) {
             if (dataPart.trim().isEmpty()) {
-                log.fine("Empty data part in '" + dataString + "'");
+                log.fine(() -> "Empty data part in '" + dataString + "'");
                 continue;
             }
 
@@ -105,7 +105,7 @@ public class NodeDataDeserializer<T extends NodeData> {
             String key = keyMatcher.group(1).substring(0, keyMatcher.end() - 1);
             String value = dataPart.substring(keyMatcher.end());
 
-            log.fine("Key: " + key + ", value: " + value);
+            log.fine(() -> "Key: " + key + ", value: " + value);
 
             PropertyDeserializer<T> deserializer = properties.get(key.toLowerCase());
 

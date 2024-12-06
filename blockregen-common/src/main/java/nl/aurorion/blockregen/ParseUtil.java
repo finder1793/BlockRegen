@@ -79,14 +79,14 @@ public class ParseUtil {
         Optional<XMaterial> xMaterial = XMaterial.matchXMaterial(input);
 
         if (!xMaterial.isPresent()) {
-            log.fine("Could not parse material " + input);
+            log.fine(() -> "Could not parse material " + input);
             return null;
         }
 
         Material material = xMaterial.get().parseMaterial();
 
         if (material != null && blocksOnly && !material.isBlock()) {
-            log.fine("Material " + input + " is not a block.");
+            log.fine(() -> "Material " + input + " is not a block.");
             return null;
         }
 

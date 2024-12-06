@@ -24,6 +24,9 @@ public class BlockPreset {
     private boolean applyFortune;
     private boolean dropNaturally;
 
+    // Disable physics of neighbouring blocks
+    private boolean disablePhysics;
+
     // Specific handling for crops (cactus, sugarcane, wheat,...)
     private boolean handleCrops;
     // Require solid ground under blocks that require it (cactus, sugarcane, wheat,...)

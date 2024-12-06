@@ -104,11 +104,13 @@ public class RegenerationProcess {
         // No need to start a task when it's time to regenerate already.
         if (timeLeft == 0 || regenerationTime <= System.currentTimeMillis()) {
             Bukkit.getScheduler().runTask(plugin, this::regenerate);
-            log.fine("Regenerated the process upon start.");
+            log.fine(() -> "Regenerated the process upon start.");
             return false;
         }
 
-        Bukkit.getScheduler().runTask(plugin, this::replaceBlock);
+//        Bukkit.getScheduler().runTask(plugin, this::replaceBlock);
+
+        replaceBlock();
 
         startTask();
         return true;
@@ -117,7 +119,7 @@ public class RegenerationProcess {
     private void startTask() {
         // Start the task
         this.task = Bukkit.getScheduler().runTaskLater(BlockRegen.getInstance(), this::regenerate, timeLeft / 50);
-        log.fine(String.format("Regenerate %s in %ds", this, timeLeft / 1000));
+        log.fine(() -> String.format("Regenerate %s in %ds", this, timeLeft / 1000));
     }
 
     public void stop() {
@@ -133,7 +135,7 @@ public class RegenerationProcess {
      * Calls BlockRegenBlockRegenerationEvent.
      */
     public void regenerate() {
-        log.fine("Regenerating " + this + "...");
+        log.fine(() -> "Regenerating " + this + "...");
 
         // Cancel the task if running.
         if (task != null) {
@@ -164,12 +166,12 @@ public class RegenerationProcess {
                     this.timeLeft = delay;
                     this.regenerationTime = System.currentTimeMillis() + timeLeft;
 
-                    log.fine("Delaying " + this + " to wait for " + processBelow + " delay: " + delay);
+                    log.fine(() -> "Delaying " + this + " to wait for " + processBelow + " delay: " + delay);
 
                     startTask();
                 } else {
                     // no block under, no regeneration,... no hope
-                    log.fine("No block under " + this + ", no point regenerating.");
+                    log.fine(() -> "No block under " + this + ", no point regenerating.");
                     plugin.getRegenerationManager().removeProcess(this);
                 }
                 return;
@@ -205,7 +207,7 @@ public class RegenerationProcess {
         // Set type
         TargetMaterial regenerateInto = getRegenerateInto();
         if (regenerateInto == null) {
-            log.fine("Found no regeneration material for " + this);
+            log.fine(() -> "Found no regeneration material for " + this);
             return;
         }
 
@@ -222,7 +224,7 @@ public class RegenerationProcess {
         regenerateInto.place(block);
         originalData.place(block); // Apply original data
         regenerateInto.applyData(block); // Override with configured data if any
-        log.fine("Regenerated " + this);
+        log.fine(() -> "Regenerated " + this);
     }
 
     // Revert process to original material.
@@ -251,7 +253,7 @@ public class RegenerationProcess {
 
             block.setType(material);
             originalData.place(this.block);
-            log.fine(String.format("Reverted block for %s", this));
+            log.fine(() -> String.format("Reverted block for %s", this));
         }
     }
 
@@ -273,12 +275,12 @@ public class RegenerationProcess {
         }
 
         this.replaceMaterial.place(block);
-        this.originalData.place(block); // Apply original data
-        replaceMaterial.applyData(block); // Apply configured data if any
+        // this.originalData.place(block); // Apply original data
+        // replaceMaterial.applyData(block); // Apply configured data if any
 
         // Otherwise skull textures wouldn't update.
-        Bukkit.getScheduler().runTaskLater(BlockRegen.getInstance(), () -> block.getState().update(true), 1L);
-        log.fine("Replaced block for " + this);
+        // Bukkit.getScheduler().runTaskLater(BlockRegen.getInstance(), () -> block.getState().update(true), 1L);
+        log.fine(() -> "Replaced block for " + this);
     }
 
     public TargetMaterial getRegenerateInto() {

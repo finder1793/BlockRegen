@@ -72,7 +72,7 @@ public class LatestNodeData implements NodeData {
     public boolean check(Block block) {
         BlockData data = block.getBlockData();
 
-        log.fine(String.format("Checking %s against block %s", this, data.getAsString()));
+        log.fine(() -> String.format("Checking %s against block %s", this, data.getAsString()));
 
         if (this.skull != null && block.getState() instanceof Skull) {
             try {
@@ -216,7 +216,7 @@ public class LatestNodeData implements NodeData {
             this.faces.addAll(multipleFacing.getFaces());
         }
 
-        log.fine(String.format("Loaded block data %s (%s)", block.getType(), this));
+        log.fine(() -> String.format("Loaded block data %s (%s)", block.getType(), this));
     }
 
     @Override

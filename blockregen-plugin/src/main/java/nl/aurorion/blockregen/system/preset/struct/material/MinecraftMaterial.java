@@ -53,7 +53,7 @@ public class MinecraftMaterial implements TargetMaterial {
 
     @Override
     public boolean requiresSolidGround() {
-        return BlockUtil.isMultiblockCrop(material) || XBlock.isCrop(material);
+        return BlockUtil.isMultiblockCrop(material) || XBlock.isCrop(material) || BlockUtil.reliesOnBlockBelow(material);
     }
 
     @Override

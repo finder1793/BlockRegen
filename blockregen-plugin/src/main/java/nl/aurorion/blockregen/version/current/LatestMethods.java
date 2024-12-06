@@ -15,10 +15,10 @@ import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
+import org.bukkit.event.block.BlockDropItemEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.bukkit.event.block.BlockDropItemEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,8 +48,9 @@ public class LatestMethods implements Methods {
 
     @Nullable
     private BarStyle parseStyle(@Nullable String str) {
-        if (Strings.isNullOrEmpty(str))
+        if (Strings.isNullOrEmpty(str)) {
             return null;
+        }
 
         try {
             return BarStyle.valueOf(str.trim().toUpperCase());
@@ -60,8 +61,9 @@ public class LatestMethods implements Methods {
 
     @Nullable
     private BarColor parseColor(@Nullable String str) {
-        if (Strings.isNullOrEmpty(str))
+        if (Strings.isNullOrEmpty(str)) {
             return null;
+        }
 
         try {
             return BarColor.valueOf(str.trim().toUpperCase());
@@ -72,18 +74,18 @@ public class LatestMethods implements Methods {
 
     @Override
     public void handleDropItemEvent(Player player, BlockState blockState, List<Item> items) {
-            BlockDropItemEvent event = new BlockDropItemEvent(blockState.getBlock(), blockState, player, new ArrayList<>(items));
-            Bukkit.getPluginManager().callEvent(event);
+        BlockDropItemEvent event = new BlockDropItemEvent(blockState.getBlock(), blockState, player, new ArrayList<>(items));
+        Bukkit.getPluginManager().callEvent(event);
 
-            // Delete the entities if any other plugins cancel the event or clear the drops.
-            // Otherwise, we get duplicated drops from enchantment plugins.
-            // Note: This means that any changes a plugin applies to the items is not going to be reflected on the drops.
-            // Note: I am not sure how to make that work, nor whether it should be a thing.
+        // Delete the entities if any other plugins cancel the event or clear the drops.
+        // Otherwise, we get duplicated drops from enchantment plugins.
+        // Note: This means that any changes a plugin applies to the items is not going to be reflected on the drops.
+        // Note: I am not sure how to make that work, nor whether it should be a thing.
 
-            if (event.isCancelled() || event.getItems().isEmpty()) {
-                log.fine("Drops got cancelled.");
-                items.forEach(Entity::remove);
-            }
+        if (event.isCancelled() || event.getItems().isEmpty()) {
+            log.fine(() -> "Drops got cancelled.");
+            items.forEach(Entity::remove);
+        }
     }
 
     @Override

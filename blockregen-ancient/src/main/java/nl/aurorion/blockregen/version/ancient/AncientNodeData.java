@@ -120,7 +120,7 @@ public class AncientNodeData implements NodeData {
             this.cropState = crops.getState();
         }
 
-        log.fine(String.format("Loaded block data %s (%s)", block.getType(), this));
+        log.fine(() -> String.format("Loaded block data %s (%s)", block.getType(), this));
     }
 
     @Override

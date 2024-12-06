@@ -26,11 +26,30 @@ public class BlockUtil {
     }
 
     public static boolean isMultiblockCrop(XMaterial type) {
-        return type == XMaterial.CACTUS ||
-                type == XMaterial.SUGAR_CANE ||
-                type == XMaterial.BAMBOO ||
-                type == XMaterial.KELP_PLANT ||
-                type == XMaterial.KELP ||
-                type == XMaterial.TALL_SEAGRASS;
+        switch (type) {
+            case TALL_GRASS:
+            case CACTUS:
+            case BAMBOO:
+            case KELP_PLANT:
+            case KELP:
+            case TALL_SEAGRASS:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    public static boolean reliesOnBlockBelow(XMaterial material) {
+        if (isMultiblockCrop(material)) {
+            return true;
+        }
+
+        switch (material) {
+            case MOSS_CARPET:
+            case SHORT_GRASS:
+                return true;
+            default:
+                return false;
+        }
     }
 }

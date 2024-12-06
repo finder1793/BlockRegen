@@ -98,12 +98,12 @@ public class RegenerationManager {
         Objects.requireNonNull(process);
 
         if (this.getProcess(process.getBlock()) != null) {
-            log.fine(String.format("Cache already contains process for location %s", process.getLocation()));
+            log.fine(() -> String.format("Cache already contains process for location %s", process.getLocation()));
             return;
         }
 
         cache.add(process);
-        log.fine("Registered regeneration process " + process);
+        log.fine(() -> "Registered regeneration process " + process);
     }
 
     @Nullable
@@ -130,9 +130,9 @@ public class RegenerationManager {
 
     public void removeProcess(RegenerationProcess process) {
         if (cache.remove(process)) {
-            log.fine(String.format("Removed process from cache: %s", process));
+            log.fine(() -> String.format("Removed process from cache: %s", process));
         } else {
-            log.fine(String.format("Process %s not found, not removed.", process));
+            log.fine(() -> String.format("Process %s not found, not removed.", process));
         }
     }
 
@@ -226,7 +226,7 @@ public class RegenerationManager {
                             Bukkit.getScheduler().runTask(plugin, process::revert);
                             continue;
                         }
-                        log.fine("Prepared regeneration process " + process);
+                        log.fine(() -> "Prepared regeneration process " + process);
                     }
 
                     if (!this.retry) {

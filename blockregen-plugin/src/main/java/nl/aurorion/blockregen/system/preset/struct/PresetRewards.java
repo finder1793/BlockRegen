@@ -77,7 +77,7 @@ public class PresetRewards {
                 }
             }
 
-            log.fine("Loaded drops " + rewards.getDrops().stream().map(ItemDrop::toString).collect(Collectors.joining()));
+            log.fine(() -> "Loaded drops " + rewards.getDrops().stream().map(ItemDrop::toString).collect(Collectors.joining()));
         }
         return rewards;
     }

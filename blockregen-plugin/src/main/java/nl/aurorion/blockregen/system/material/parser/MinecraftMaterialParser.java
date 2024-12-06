@@ -20,7 +20,7 @@ public class MinecraftMaterialParser implements MaterialParser {
 
     @Override
     public @NotNull TargetMaterial parseMaterial(String input) throws IllegalArgumentException {
-        log.fine(String.format("Parsing MC material from %s", input));
+        log.fine(() -> String.format("Parsing MC material from %s", input));
 
         boolean loadData = false;
 

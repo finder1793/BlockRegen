@@ -105,7 +105,7 @@ public class PresetManager {
             log.warning(String.format("Could not load preset %s: %s", name, e.getMessage()));
             return;
         }
-        log.fine(String.format("target-material: %s", preset.getTargetMaterial()));
+        log.fine(() -> String.format("target-material: %s", preset.getTargetMaterial()));
 
         // Replace material
         String replaceMaterial = section.getString("replace-block");
@@ -122,7 +122,7 @@ public class PresetManager {
                     + " is invalid: " + e.getMessage());
             return;
         }
-        log.fine(String.format("replace-material: %s", preset.getReplaceMaterial()));
+        log.fine(() -> String.format("replace-material: %s", preset.getReplaceMaterial()));
 
         // Regenerate into
         String regenerateIntoInput = section.getString("regenerate-into");
@@ -138,13 +138,15 @@ public class PresetManager {
                 return;
             }
         }
-        log.fine(String.format("regenerate-into: %s", preset.getRegenMaterial()));
+        log.fine(() -> String.format("regenerate-into: %s", preset.getRegenMaterial()));
 
         // Delay
         preset.setDelay(Amount.load(file, "Blocks." + name + ".regen-delay", 3));
 
         // Natural break
         preset.setNaturalBreak(section.getBoolean("natural-break", true));
+
+        preset.setDisablePhysics(section.getBoolean("disable-physics", false));
 
         // Apply fortune
         preset.setApplyFortune(section.getBoolean("apply-fortune", true));
